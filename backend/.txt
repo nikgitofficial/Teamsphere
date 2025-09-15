@@ -1,0 +1,12 @@
+MONGO_URI=mongodb+srv://nickpacs123:1234@cluster0.zkynjb5.mongodb.net/ats?retryWrites=true&w=majority&appName=Cluster0
+JWT_SECRET=2f07c9c8f7e64318b236bde5b2e3c4d2a8e87a913c4c1f2e7f6e8a9b7c9d
+JWT_REFRESH_SECRET=07f71a4df85b4b25a0d3ce45d48e4a3c16bba07f0d9b2f16b25a04d9e7c1b
+CLIENT_URL=https://niko-nikonik-rouge.vercel.app
+NODE_ENV=production
+
+CLOUDINARY_API_KEY=739318956796894
+CLOUDINARY_API_SECRET=w0H8mXPxNaaSMuGgkjQMdm_dBdA
+CLOUDINARY_CLOUD_NAME=daogfnehz
+
+OTP_APP_PASSWORD=xpplnnfvqiawevbc
+OTP_EMAIL=nikkopacenio@gmail.com

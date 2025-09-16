@@ -41,6 +41,7 @@ const EmployeePage = () => {
     fullName: "",
     position: "",
     birthdate: "",
+    hireDate :"",
     age: "",
     status: "",
     address: "",
@@ -49,7 +50,9 @@ const EmployeePage = () => {
     department: "",
     salary: "",
     emergencyContact: { name: "", relation: "", phone: "" },
+    profilePic: "",
   });
+  const [file, setFile] = useState(null); // 👈 added for file upload
   const [editId, setEditId] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [search, setSearch] = useState("");
@@ -76,20 +79,42 @@ const EmployeePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let employeeData = { ...form };
+
       if (editId) {
-        await axios.put(`/employees/${editId}`, form);
+        await axios.put(`/employees/${editId}`, employeeData);
+
+        if (file) {
+          const formData = new FormData();
+          formData.append("profilePic", file);
+          await axios.post(`/employees/${editId}/upload-pic`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        }
+
         setOpenSnackbar({ open: true, msg: "Employee updated!" });
       } else {
-        const { data } = await axios.post("/employees", form);
+        const { data } = await axios.post("/employees", employeeData);
+
+        if (file) {
+          const formData = new FormData();
+          formData.append("profilePic", file);
+          await axios.post(`/employees/${data._id}/upload-pic`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        }
+
         setOpenSnackbar({
           open: true,
           msg: `Employee added! Generated PIN: ${data.pincode}`,
         });
       }
+
       setForm({
         fullName: "",
         position: "",
         birthdate: "",
+        hireDate:"",
         age: "",
         status: "",
         address: "",
@@ -98,7 +123,9 @@ const EmployeePage = () => {
         department: "",
         salary: "",
         emergencyContact: { name: "", relation: "", phone: "" },
+        profilePic: "",
       });
+      setFile(null);
       setEditId(null);
       setOpenDialog(false);
       fetchEmployees();
@@ -124,6 +151,7 @@ const EmployeePage = () => {
       fullName: employee.fullName || "",
       position: employee.position || "",
       birthdate: employee.birthdate ? employee.birthdate.substring(0, 10) : "",
+      hireDate: employee.hireDate ? employee.hireDate.substring(0, 10) : "",
       age: employee.age || "",
       status: employee.status || "",
       address: employee.address || "",
@@ -136,6 +164,7 @@ const EmployeePage = () => {
         relation: "",
         phone: "",
       },
+      profilePic: employee.profilePic || "",
     });
     setEditId(employee._id);
     setOpenDialog(true);
@@ -245,29 +274,30 @@ const EmployeePage = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>
-                  <strong>Full Name</strong>
-                </TableCell>
-                <TableCell>
-                  <strong>Position</strong>
-                </TableCell>
-                <TableCell>
-                  <strong>Phone</strong>
-                </TableCell>
-                <TableCell>
-                  <strong>Status</strong>
-                </TableCell>
-                <TableCell>
-                  <strong>PIN</strong>
-                </TableCell>
-                <TableCell align="center">
-                  <strong>Actions</strong>
-                </TableCell>
+                <TableCell><strong>Profile</strong></TableCell>
+                <TableCell><strong>Full Name</strong></TableCell>
+                <TableCell><strong>Position</strong></TableCell>
+                <TableCell><strong>Phone</strong></TableCell>
+                <TableCell><strong>Status</strong></TableCell>
+                <TableCell><strong>PIN</strong></TableCell>
+                <TableCell align="center"><strong>Actions</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredEmployees.map((emp) => (
                 <TableRow key={emp._id} hover>
+                  <TableCell>
+                    <img
+                      src={emp.profilePic || "https://via.placeholder.com/40"}
+                      alt="profile"
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </TableCell>
                   <TableCell
                     sx={{ cursor: "pointer", color: "primary.main" }}
                     onClick={() => setViewEmployee(emp)}
@@ -317,6 +347,27 @@ const EmployeePage = () => {
               mt: 1,
             }}
           >
+            {/* Profile Picture Upload */}
+            <Button variant="contained" component="label">
+              {file ? "Change Profile Picture" : "Upload Profile Picture"}
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={(e) => setFile(e.target.files[0])}
+              />
+            </Button>
+            {(file || form.profilePic) && (
+              <Box mt={2} textAlign="center">
+                <img
+                  src={file ? URL.createObjectURL(file) : form.profilePic}
+                  alt="preview"
+                  style={{ width: 100, height: 100, borderRadius: "50%" }}
+                />
+              </Box>
+            )}
+
+            {/* Other fields */}
             <TextField
               label="Full Name"
               value={form.fullName}
@@ -339,6 +390,14 @@ const EmployeePage = () => {
               InputLabelProps={{ shrink: true }}
               fullWidth
             />
+              <TextField
+              label="Hire Date"
+              type="date"
+              value={form.hireDate}
+              onChange={(e) => setForm({ ...form, hireDate: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
             <TextField
               label="Age"
               type="number"
@@ -346,21 +405,20 @@ const EmployeePage = () => {
               onChange={(e) => setForm({ ...form, age: e.target.value })}
               fullWidth
             />
-<FormControl fullWidth>
-  <InputLabel>Status</InputLabel>
-  <Select
-    value={form.status}
-    label="Status"
-    onChange={(e) => setForm({ ...form, status: e.target.value })}
-  >
-    <MenuItem value="Single">Single</MenuItem>
-    <MenuItem value="Married">Married</MenuItem>
-    <MenuItem value="Widowed">Widowed</MenuItem>
-    <MenuItem value="Separated">Separated</MenuItem>
-    <MenuItem value="Other">Other</MenuItem>
-  </Select>
-</FormControl>
-
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={form.status}
+                label="Status"
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+              >
+                <MenuItem value="Single">Single</MenuItem>
+                <MenuItem value="Married">Married</MenuItem>
+                <MenuItem value="Widowed">Widowed</MenuItem>
+                <MenuItem value="Separated">Separated</MenuItem>
+                <MenuItem value="Other">Other</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               label="Address"
               value={form.address}
@@ -457,39 +515,34 @@ const EmployeePage = () => {
         <DialogContent dividers>
           {viewEmployee && (
             <Box display="flex" flexDirection="column" gap={1}>
+              <Box display="flex" justifyContent="center" mb={2}>
+                <img
+                  src={viewEmployee.profilePic || "https://via.placeholder.com/80"}
+                  alt="profile"
+                  style={{ width: 80, height: 80, borderRadius: "50%" }}
+                />
+              </Box>
+              <Typography><strong>Name:</strong> {viewEmployee.fullName}</Typography>
               <Typography>
-                <strong>Name:</strong> {viewEmployee.fullName}
-              </Typography>
-              <Typography>
-                <strong>Position:</strong> {viewEmployee.position}
-              </Typography>
+  <strong>Hire Date:</strong>{" "}
+  {viewEmployee.hireDate
+    ? new Date(viewEmployee.hireDate).toLocaleDateString()
+    : "-"}
+</Typography>
+              <Typography><strong>Position:</strong> {viewEmployee.position}</Typography>
               <Typography>
                 <strong>Birthdate:</strong>{" "}
                 {viewEmployee.birthdate
                   ? new Date(viewEmployee.birthdate).toLocaleDateString()
                   : "-"}
               </Typography>
-              <Typography>
-                <strong>Age:</strong> {viewEmployee.age || "-"}
-              </Typography>
-              <Typography>
-                <strong>Status:</strong> {viewEmployee.status || "-"}
-              </Typography>
-              <Typography>
-                <strong>Address:</strong> {viewEmployee.address || "-"}
-              </Typography>
-              <Typography>
-                <strong>Phone:</strong> {viewEmployee.phone || "-"}
-              </Typography>
-              <Typography>
-                <strong>Email:</strong> {viewEmployee.email || "-"}
-              </Typography>
-              <Typography>
-                <strong>Department:</strong> {viewEmployee.department || "-"}
-              </Typography>
-              <Typography>
-                <strong>Salary:</strong> {viewEmployee.salary || "-"}
-              </Typography>
+              <Typography><strong>Age:</strong> {viewEmployee.age || "-"}</Typography>
+              <Typography><strong>Status:</strong> {viewEmployee.status || "-"}</Typography>
+              <Typography><strong>Address:</strong> {viewEmployee.address || "-"}</Typography>
+              <Typography><strong>Phone:</strong> {viewEmployee.phone || "-"}</Typography>
+              <Typography><strong>Email:</strong> {viewEmployee.email || "-"}</Typography>
+              <Typography><strong>Department:</strong> {viewEmployee.department || "-"}</Typography>
+              <Typography><strong>Salary:</strong> {viewEmployee.salary || "-"}</Typography>
               <Typography>
                 <strong>Emergency Contact:</strong>{" "}
                 {viewEmployee.emergencyContact

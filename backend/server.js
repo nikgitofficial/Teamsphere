@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import authRoutes from "./routes/authRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
+import profileRoutes from './routes/profileRoutes.js';
 
 
 
@@ -44,7 +45,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
-
+app.use('/api/profile', profileRoutes);
 
 
 

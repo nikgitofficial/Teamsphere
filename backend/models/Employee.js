@@ -7,6 +7,8 @@ const employeeSchema = new mongoose.Schema(
     position: { type: String, required: true },
     pincode: { type: String, required: true, unique: true }, // unique for attendance
 
+    profilePic: { type: String },
+
     // ✅ New Fields
     birthdate: { type: Date },
     age: { type: Number },

@@ -13,6 +13,7 @@ import {
   TableRow,
   Alert,
   Stack,
+  Avatar,
 } from "@mui/material";
 import axios from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
@@ -129,8 +130,21 @@ const Attendance = () => {
             <TableBody>
               {attendances.map((a) => (
                 <TableRow key={a._id} hover>
-                  <TableCell>{a.employee?.fullName}</TableCell>
-                  <TableCell>{a.date ? new Date(a.date).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "-"}</TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Avatar
+                        src={a.employee?.profilePic || ""}
+                        alt={a.employee?.fullName || "User"}
+                        sx={{ width: 36, height: 36 }}
+                      >
+                        {a.employee?.fullName?.[0] || "?"}
+                      </Avatar>
+                      <Typography>{a.employee?.fullName}</Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    {a.date ? new Date(a.date).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "-"}
+                  </TableCell>
                   <TableCell>{a.checkIn ? new Date(a.checkIn).toLocaleTimeString() : "-"}</TableCell>
                   <TableCell>{a.breakOut ? new Date(a.breakOut).toLocaleTimeString() : "-"}</TableCell>
                   <TableCell>{a.breakIn ? new Date(a.breakIn).toLocaleTimeString() : "-"}</TableCell>

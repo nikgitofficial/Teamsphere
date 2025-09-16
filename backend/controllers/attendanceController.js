@@ -12,7 +12,8 @@ const todayRange = () => {
 
 // Format response with employee populated
 const sendResponse = async (res, msg, attendanceId) => {
-  const populated = await Attendance.findById(attendanceId).populate("employee", "fullName position pincode");
+  const populated = await Attendance.findById(attendanceId).populate("employee", "fullName position pincode profilePic")
+
   res.json({ msg, attendance: populated });
 };
 
@@ -141,7 +142,7 @@ export const getTodayAttendance = async (req, res) => {
     const attendance = await Attendance.findOne({
       employee: employee._id,
       date: { $gte: start, $lte: end },
-    }).populate("employee", "fullName position pincode");
+    }).populate("employee", "fullName position pincode profilePic");
 
     if (!attendance) return res.json({ msg: "No attendance today", attendance: null });
 
@@ -161,7 +162,7 @@ export const getAllTodayAttendances = async (req, res) => {
     const attendances = await Attendance.find({
       employee: { $in: employeeIds },
       date: { $gte: start, $lte: end },
-    }).populate("employee", "fullName position pincode");
+    }).populate("employee", "fullName position pincode profilePic");
 
     res.json({ msg: "✅ All attendances today", attendances });
   } catch (err) {
@@ -179,7 +180,7 @@ export const getAllAttendances = async (req, res) => {
     // Find all attendance records for those employees
     const attendances = await Attendance.find({
       employee: { $in: employeeIds },
-    }).populate("employee", "fullName position pincode");
+    }).populate("employee", "fullName position pincode profilePic");
 
     res.json({ msg: "✅ All attendances retrieved", attendances });
   } catch (err) {
@@ -206,7 +207,7 @@ export const getAttendancesByDateRange = async (req, res) => {
     const attendances = await Attendance.find({
       employee: { $in: employeeIds },
       date: { $gte: startDate, $lte: endDate },
-    }).populate("employee", "fullName position pincode");
+    }).populate("employee", "fullName position pincode profilePic");
 
     res.json({ msg: "✅ Attendances fetched", attendances });
   } catch (err) {

@@ -13,6 +13,8 @@ import EmployeePage from "./pages/EmployeePage";
 import ForgotPassword from "./pages/ForgotPassword"; 
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import Profile from "./pages/Profile.jsx";
+import Settings  from "./pages/Settings.jsx";
 
 // ProtectedRoute
 const ProtectedRoute = ({ user, children }) => {
@@ -48,6 +50,8 @@ const App = () => {
                 <Route path="home" element={<Home />} />
                 <Route path="employees" element={<EmployeePage />} />
                 <Route path="attendance-overview" element={<AttendanceOverview />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="settings" element={<Settings />} />
               </Route>
 
               <Route path="/attendance" element={<Attendance />} />

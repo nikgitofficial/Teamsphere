@@ -160,20 +160,28 @@ const Dashboard = () => {
         <Divider sx={{ mb: 2, borderColor: "rgba(255,255,255,0.2)" }} />
 
         {/* Search */}
-        <Box sx={{ px: 2, mb: 2 }}>
-          <TextField
-            fullWidth
-            placeholder="Search here"
-            size="small"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
+       <Box sx={{ px: 2, mb: 2 }}>
+  <TextField
+    fullWidth
+    placeholder="Search here"
+    size="small"
+    InputProps={{
+      startAdornment: (
+        <InputAdornment position="start">
+          <Search sx={{ color: "white" }} />
+        </InputAdornment>
+      ),
+      sx: {
+        color: "white", // text color
+        "& .MuiInputBase-input::placeholder": {
+          color: "white", // placeholder color
+          opacity: 1,
+        },
+      },
+    }}
+    variant="outlined" // optional, for visibility on dark background
+  />
+</Box>
 
         {/* Navigation */}
         <List

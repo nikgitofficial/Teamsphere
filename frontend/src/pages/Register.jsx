@@ -9,7 +9,10 @@ import {
   Paper,
   Snackbar,
   Alert,
+  IconButton,
+  InputAdornment,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "../api/axios";
 
 const Register = () => {
@@ -27,6 +30,7 @@ const Register = () => {
 
   const [passwordValid, setPasswordValid] = useState(false); // ✅ for live validation
   const [emailError, setEmailError] = useState(""); // ✅ new state for email error
+  const [showPassword, setShowPassword] = useState(false); // ✅ toggle state
 
   const navigate = useNavigate();
 
@@ -110,11 +114,23 @@ const Register = () => {
             <TextField
               name="password"
               label="Password"
-              type="password"
+              type={showPassword ? "text" : "password"} // ✅ toggle
               value={form.password}
               onChange={handleChange}
               fullWidth
               required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
             {/* ✅ Live password validation feedback */}
             {form.password && (

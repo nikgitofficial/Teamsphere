@@ -23,7 +23,9 @@ import {
   Stack,
   Tooltip,
 } from "@mui/material";
+import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import { Delete, Edit } from "@mui/icons-material";
+
 import axios from "../api/axios";
 
 // ✅ Export imports
@@ -35,10 +37,23 @@ const EmployeePage = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openSnackbar, setOpenSnackbar] = useState({ open: false, msg: "" });
-  const [form, setForm] = useState({ fullName: "", position: "" });
+  const [form, setForm] = useState({
+    fullName: "",
+    position: "",
+    birthdate: "",
+    age: "",
+    status: "",
+    address: "",
+    phone: "",
+    email: "",
+    department: "",
+    salary: "",
+    emergencyContact: { name: "", relation: "", phone: "" },
+  });
   const [editId, setEditId] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [search, setSearch] = useState("");
+  const [viewEmployee, setViewEmployee] = useState(null); // 👈 for View Details dialog
 
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down("sm"));
@@ -71,7 +86,19 @@ const EmployeePage = () => {
           msg: `Employee added! Generated PIN: ${data.pincode}`,
         });
       }
-      setForm({ fullName: "", position: "" });
+      setForm({
+        fullName: "",
+        position: "",
+        birthdate: "",
+        age: "",
+        status: "",
+        address: "",
+        phone: "",
+        email: "",
+        department: "",
+        salary: "",
+        emergencyContact: { name: "", relation: "", phone: "" },
+      });
       setEditId(null);
       setOpenDialog(false);
       fetchEmployees();
@@ -91,8 +118,25 @@ const EmployeePage = () => {
     }
   };
 
+  // Edit handler
   const handleEdit = (employee) => {
-    setForm({ fullName: employee.fullName, position: employee.position });
+    setForm({
+      fullName: employee.fullName || "",
+      position: employee.position || "",
+      birthdate: employee.birthdate ? employee.birthdate.substring(0, 10) : "",
+      age: employee.age || "",
+      status: employee.status || "",
+      address: employee.address || "",
+      phone: employee.phone || "",
+      email: employee.email || "",
+      department: employee.department || "",
+      salary: employee.salary || "",
+      emergencyContact: employee.emergencyContact || {
+        name: "",
+        relation: "",
+        phone: "",
+      },
+    });
     setEditId(employee._id);
     setOpenDialog(true);
   };
@@ -139,7 +183,12 @@ const EmployeePage = () => {
   };
 
   return (
-    <Box display="flex" flexDirection="column" alignItems="center" p={{ xs: 2, sm: 3 }}>
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      p={{ xs: 2, sm: 3 }}
+    >
       <Typography variant={isSm ? "h5" : "h4"} mb={3} fontWeight="bold">
         Employee Management
       </Typography>
@@ -186,27 +235,57 @@ const EmployeePage = () => {
           No employees found.
         </Typography>
       ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 2, width: { xs: "100%", sm: "70%", md: "60%" } }}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 2,
+            width: { xs: "100%", sm: "70%", md: "60%" },
+          }}
+        >
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell><strong>Full Name</strong></TableCell>
-                <TableCell><strong>Position</strong></TableCell>
-                <TableCell><strong>PIN</strong></TableCell>
-                <TableCell align="center"><strong>Actions</strong></TableCell>
+                <TableCell>
+                  <strong>Full Name</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Position</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Phone</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>Status</strong>
+                </TableCell>
+                <TableCell>
+                  <strong>PIN</strong>
+                </TableCell>
+                <TableCell align="center">
+                  <strong>Actions</strong>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredEmployees.map((emp) => (
                 <TableRow key={emp._id} hover>
-                  <TableCell>{emp.fullName}</TableCell>
+                  <TableCell
+                    sx={{ cursor: "pointer", color: "primary.main" }}
+                    onClick={() => setViewEmployee(emp)}
+                  >
+                    {emp.fullName}
+                  </TableCell>
                   <TableCell>{emp.position}</TableCell>
+                  <TableCell>{emp.phone || "-"}</TableCell>
+                  <TableCell>{emp.status || "-"}</TableCell>
                   <TableCell>{emp.pincode}</TableCell>
                   <TableCell align="center">
                     <IconButton color="primary" onClick={() => handleEdit(emp)}>
                       <Edit />
                     </IconButton>
-                    <IconButton color="error" onClick={() => handleDelete(emp._id)}>
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDelete(emp._id)}
+                    >
                       <Delete />
                     </IconButton>
                   </TableCell>
@@ -218,12 +297,26 @@ const EmployeePage = () => {
       )}
 
       {/* Add/Edit Dialog */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="sm">
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle sx={{ fontWeight: "bold" }}>
           {editId ? "Edit Employee" : "Add Employee"}
         </DialogTitle>
         <DialogContent>
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              mt: 1,
+            }}
+          >
             <TextField
               label="Full Name"
               value={form.fullName}
@@ -238,6 +331,111 @@ const EmployeePage = () => {
               required
               fullWidth
             />
+            <TextField
+              label="Birthdate"
+              type="date"
+              value={form.birthdate}
+              onChange={(e) => setForm({ ...form, birthdate: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+            <TextField
+              label="Age"
+              type="number"
+              value={form.age}
+              onChange={(e) => setForm({ ...form, age: e.target.value })}
+              fullWidth
+            />
+<FormControl fullWidth>
+  <InputLabel>Status</InputLabel>
+  <Select
+    value={form.status}
+    label="Status"
+    onChange={(e) => setForm({ ...form, status: e.target.value })}
+  >
+    <MenuItem value="Single">Single</MenuItem>
+    <MenuItem value="Married">Married</MenuItem>
+    <MenuItem value="Widowed">Widowed</MenuItem>
+    <MenuItem value="Separated">Separated</MenuItem>
+    <MenuItem value="Other">Other</MenuItem>
+  </Select>
+</FormControl>
+
+            <TextField
+              label="Address"
+              value={form.address}
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Phone"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Email"
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Department"
+              value={form.department}
+              onChange={(e) => setForm({ ...form, department: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Salary"
+              type="number"
+              value={form.salary}
+              onChange={(e) => setForm({ ...form, salary: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Emergency Contact Name"
+              value={form.emergencyContact?.name || ""}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  emergencyContact: {
+                    ...form.emergencyContact,
+                    name: e.target.value,
+                  },
+                })
+              }
+              fullWidth
+            />
+            <TextField
+              label="Emergency Contact Relation"
+              value={form.emergencyContact?.relation || ""}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  emergencyContact: {
+                    ...form.emergencyContact,
+                    relation: e.target.value,
+                  },
+                })
+              }
+              fullWidth
+            />
+            <TextField
+              label="Emergency Contact Phone"
+              value={form.emergencyContact?.phone || ""}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  emergencyContact: {
+                    ...form.emergencyContact,
+                    phone: e.target.value,
+                  },
+                })
+              }
+              fullWidth
+            />
+
             <DialogActions sx={{ px: 0, pt: 2 }}>
               <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
               <Button type="submit" variant="contained" color="primary">
@@ -246,6 +444,64 @@ const EmployeePage = () => {
             </DialogActions>
           </Box>
         </DialogContent>
+      </Dialog>
+
+      {/* View Details Dialog */}
+      <Dialog
+        open={!!viewEmployee}
+        onClose={() => setViewEmployee(null)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Employee Details</DialogTitle>
+        <DialogContent dividers>
+          {viewEmployee && (
+            <Box display="flex" flexDirection="column" gap={1}>
+              <Typography>
+                <strong>Name:</strong> {viewEmployee.fullName}
+              </Typography>
+              <Typography>
+                <strong>Position:</strong> {viewEmployee.position}
+              </Typography>
+              <Typography>
+                <strong>Birthdate:</strong>{" "}
+                {viewEmployee.birthdate
+                  ? new Date(viewEmployee.birthdate).toLocaleDateString()
+                  : "-"}
+              </Typography>
+              <Typography>
+                <strong>Age:</strong> {viewEmployee.age || "-"}
+              </Typography>
+              <Typography>
+                <strong>Status:</strong> {viewEmployee.status || "-"}
+              </Typography>
+              <Typography>
+                <strong>Address:</strong> {viewEmployee.address || "-"}
+              </Typography>
+              <Typography>
+                <strong>Phone:</strong> {viewEmployee.phone || "-"}
+              </Typography>
+              <Typography>
+                <strong>Email:</strong> {viewEmployee.email || "-"}
+              </Typography>
+              <Typography>
+                <strong>Department:</strong> {viewEmployee.department || "-"}
+              </Typography>
+              <Typography>
+                <strong>Salary:</strong> {viewEmployee.salary || "-"}
+              </Typography>
+              <Typography>
+                <strong>Emergency Contact:</strong>{" "}
+                {viewEmployee.emergencyContact
+                  ? `${viewEmployee.emergencyContact.name} (${viewEmployee.emergencyContact.relation}) - ${viewEmployee.emergencyContact.phone}`
+                  : "-"}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewEmployee(null)}>Close</Button>
+        </DialogActions>
       </Dialog>
 
       <Snackbar

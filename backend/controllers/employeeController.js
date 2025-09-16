@@ -14,15 +14,24 @@ const generateUniquePincode = async () => {
 // Create employee (linked to logged-in user)
 export const createEmployee = async (req, res) => {
   try {
-    const { fullName, position } = req.body;
+    const { fullName, position, birthdate, age, status, address, phone, email, department, salary, emergencyContact } = req.body;
 
     const pincode = await generateUniquePincode();
 
     const employee = new Employee({
       fullName,
       position,
+      birthdate,
+      age,
+      status,
+      address,
+      phone,
+      email,
+      department,
+      salary,
+      emergencyContact,
       pincode,
-      user: req.user.id, // assign to authenticated user
+      user: req.user.id,
     });
 
     await employee.save();
@@ -45,11 +54,11 @@ export const getEmployees = async (req, res) => {
 // Update employee (only if belongs to user)
 export const updateEmployee = async (req, res) => {
   try {
-    const { fullName, position } = req.body;
+    const updateData = { ...req.body };
 
     const employee = await Employee.findOneAndUpdate(
       { _id: req.params.id, user: req.user.id },
-      { fullName, position },
+      updateData,
       { new: true }
     );
 

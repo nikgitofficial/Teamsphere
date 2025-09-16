@@ -20,7 +20,7 @@ import {
   CssBaseline,
   useTheme,
   useMediaQuery,
- } from "@mui/material";
+} from "@mui/material";
 import {
   Home,
   VideoLibrary,
@@ -93,155 +93,170 @@ const Dashboard = () => {
   };
 
   const handleLogout = async () => {
-  try {
-    await axios.post("/auth/logout", {}, { withCredentials: true });
-  } catch (err) {
-    console.error("Logout request failed:", err.message);
-  }
+    try {
+      await axios.post("/auth/logout", {}, { withCredentials: true });
+    } catch (err) {
+      console.error("Logout request failed:", err.message);
+    }
 
-  // Clear localStorage
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
 
-  // Clear context
-  setUser(null);
+    setUser(null);
 
-  // Navigate to login
-  navigate("/login", { replace: true });
-};
+    navigate("/login", { replace: true });
+  };
 
-const drawerContent = (
-  <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-    <Box>
-      {/* Profile Section */}
-      <Box sx={{ textAlign: "center", mb: 3, px: 2 }}>
-        <Box sx={{ position: "relative", display: "inline-block" }}>
-          <input
-            ref={fileInputRef}
-            hidden
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-          />
-          <IconButton onClick={() => fileInputRef.current.click()}>
-            <Avatar
-              src={user?.profilePic || ""}
-              alt="User"
-              sx={{ width: 72, height: 72, mx: "auto" }}
+  const drawerContent = (
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <Box>
+        {/* Profile Section */}
+        <Box sx={{ textAlign: "center", mb: 3, px: 2 }}>
+          <Box sx={{ position: "relative", display: "inline-block" }}>
+            <input
+              ref={fileInputRef}
+              hidden
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
             />
-            {loading && (
-              <CircularProgress
-                size={72}
-                sx={{
-                  position: "absolute",
-                  top: 0,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  color: "primary.main",
-                }}
+            <IconButton onClick={() => fileInputRef.current.click()}>
+              <Avatar
+                src={user?.profilePic || ""}
+                alt="User"
+                sx={{ width: 72, height: 72, mx: "auto" }}
               />
-            )}
-          </IconButton>
+              {loading && (
+                <CircularProgress
+                  size={72}
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    color: "primary.main",
+                  }}
+                />
+              )}
+            </IconButton>
+          </Box>
+          <Typography
+  variant="subtitle1"
+  sx={{ fontWeight: "bold", mt: 1, color: "white" }}
+>
+  {user?.username || "User"}
+</Typography>
+
+<Typography
+  variant="body2"
+  sx={{ color: "white" }}
+>
+  {user?.email}
+</Typography>
+
         </Box>
-        <Typography variant="subtitle1" sx={{ fontWeight: "bold", mt: 1 }}>
-          {user?.username || "User"}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {user?.email}
-        </Typography>
-      </Box>
 
-      <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: "rgba(255,255,255,0.2)" }} />
 
-      {/* Search */}
-      <Box sx={{ px: 2, mb: 2 }}>
-        <TextField
-          fullWidth
-          placeholder="Search here"
-          size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
+        {/* Search */}
+        <Box sx={{ px: 2, mb: 2 }}>
+          <TextField
+            fullWidth
+            placeholder="Search here"
+            size="small"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
 
-      {/* Navigation */}
-      <List>
-        <ListItemButton
-          component={Link}
-          to="/dashboard/home"
-          selected={location.pathname === "/dashboard/home"}
-        >
-          <ListItemIcon>
-            <Home />
-          </ListItemIcon>
-          <ListItemText primary="Home" />
-        </ListItemButton>
+        {/* Navigation */}
+        <List
+          sx={{
+    "& .MuiListItemButton-root:hover": {
+      bgcolor: "black",
+      color: "black",
+      "& .MuiListItemIcon-root": {
+        color: "black",
+      },
+    },
+  }}>
           <ListItemButton
-    component={Link}
-    to="/dashboard/employees"
-    selected={location.pathname === "/dashboard/employees"}
-  >
-    <ListItemIcon>
-      <PermMedia /> {/* You can change icon to something like People if you want */}
-    </ListItemIcon>
-    <ListItemText primary="Employees" />
-  </ListItemButton>
-  <ListItemButton
-  component={Link}
-  to="/dashboard/attendance-overview"
-  selected={location.pathname === "/dashboard/attendance-overview"}
->
-  <ListItemIcon>
-    <Assignment /> {/* Unique icon */}
-  </ListItemIcon>
-  <ListItemText primary="Attendance Overview" />
-</ListItemButton>
+            component={Link}
+            to="/dashboard/home"
+            selected={location.pathname === "/dashboard/home"}
+          >
+            <ListItemIcon>
+              <Home sx={{ color: "orange" }} />
+            </ListItemIcon>
+            <ListItemText primary="Home" sx={{ color: "white" }} />
+          </ListItemButton>
 
-        <ListItemButton
-  component="a"
-  href="/attendance"
-  target="_blank"
-  rel="noopener noreferrer"
->
-  <ListItemIcon>
-    <PermMedia />
-  </ListItemIcon>
-  <ListItemText primary="Attendance" />
-</ListItemButton>
+          <ListItemButton
+            component={Link}
+            to="/dashboard/employees"
+            selected={location.pathname === "/dashboard/employees"}
+          >
+            <ListItemIcon>
+              <PermMedia sx={{ color: "brown" }} />
+            </ListItemIcon>
+            <ListItemText primary="Employees" sx={{ color: "white" }} />
+          </ListItemButton>
 
-        <Divider sx={{ my: 2 }} />
+          <ListItemButton
+            component={Link}
+            to="/dashboard/attendance-overview"
+            selected={location.pathname === "/dashboard/attendance-overview"}
+          >
+            <ListItemIcon>
+              <Assignment sx={{ color: "#AFEEEE" }} />
+            </ListItemIcon>
+            <ListItemText primary="Attendance Overview" sx={{ color: "white" }} />
+          </ListItemButton>
 
-        <ListItemButton
-          component={Link}
-          to="/dashboard/settings"
-          selected={location.pathname === "/dashboard/settings"}
-        >
+          <ListItemButton
+            component="a"
+            href="/attendance"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <ListItemIcon>
+              <PermMedia sx={{ color: "#4682B4" }} />
+            </ListItemIcon>
+            <ListItemText primary="Attendance" sx={{ color: "white" }} />
+          </ListItemButton>
+
+          <Divider sx={{ my: 2, borderColor: "rgba(255,255,255,0.2)" }} />
+
+          <ListItemButton
+            component={Link}
+            to="/dashboard/settings"
+            selected={location.pathname === "/dashboard/settings"}
+          >
+            <ListItemIcon>
+              <Settings sx={{ color: "white" }} />
+            </ListItemIcon>
+            <ListItemText primary="Settings" sx={{ color: "white" }} />
+          </ListItemButton>
+        </List>
+      </Box>
+
+      {/* Logout */}
+      <Box sx={{ p: 2 }}>
+        <ListItemButton onClick={handleLogout}>
           <ListItemIcon>
-            <Settings />
+            <Logout sx={{ color: "red" }} />
           </ListItemIcon>
-          <ListItemText primary="Settings" />
+          <ListItemText primary="Logout" sx={{ color: "white" }} />
         </ListItemButton>
-      </List>
+      </Box>
     </Box>
-
-    {/* Logout */}
-    <Box sx={{ p: 2 }}>
-      <ListItemButton onClick={handleLogout}>
-        <ListItemIcon>
-          <Logout color="error" />
-        </ListItemIcon>
-        <ListItemText primary="Logout" />
-      </ListItemButton>
-    </Box>
-  </Box>
-);
-
+  );
 
   return (
     <ThemeProvider theme={theme}>
@@ -254,8 +269,8 @@ const drawerContent = (
             width: { md: `calc(100% - ${drawerWidth}px)` },
             ml: { md: `${drawerWidth}px` },
             boxShadow: 1,
-            bgcolor: darkMode ? "background.paper" : "white",
-            color: darkMode ? "text.primary" : "text.primary",
+            bgcolor: "#000080", // AppBar black
+            color: "white",
           }}
         >
           <Toolbar>
@@ -325,6 +340,8 @@ const drawerContent = (
                 width: drawerWidth,
                 boxSizing: "border-box",
                 pt: 2,
+                bgcolor: "#000080", // Drawer black
+                color: "white",
               },
             }}
           >

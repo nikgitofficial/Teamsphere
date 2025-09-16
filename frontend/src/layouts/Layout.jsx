@@ -15,6 +15,7 @@ const Layout = () => {
     "/dashboard/home",
     "/dashboard/employees",
     "/dashboard/attendance-overview",
+    "/dashboard",
    
   ];
 
@@ -24,6 +25,7 @@ const Layout = () => {
     "/dashboard/home",
     "/dashboard/employees",
     "/dashboard/attendance-overview",
+    "/dashboard",
     
     
   ];

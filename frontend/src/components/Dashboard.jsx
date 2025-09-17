@@ -33,6 +33,9 @@ import {
   Brightness7,
   Menu,
   Assignment,
+  MonetizationOn,
+  People,
+  AccessTime,
 } from "@mui/icons-material";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -187,8 +190,8 @@ const Dashboard = () => {
         <List
           sx={{
     "& .MuiListItemButton-root:hover": {
-      bgcolor: "black",
-      color: "black",
+      bgcolor: "#FF8C00",
+      color: "#FF8C00",
       "& .MuiListItemIcon-root": {
         color: "black",
       },
@@ -206,26 +209,26 @@ const Dashboard = () => {
           </ListItemButton>
 
           <ListItemButton
-            component={Link}
-            to="/dashboard/employees"
-            selected={location.pathname === "/dashboard/employees"}
-          >
-            <ListItemIcon>
-              <PermMedia sx={{ color: "brown" }} />
-            </ListItemIcon>
-            <ListItemText primary="Employees" sx={{ color: "white" }} />
-          </ListItemButton>
+  component={Link}
+  to="/dashboard/employees"
+  selected={location.pathname === "/dashboard/employees"}
+>
+  <ListItemIcon>
+    <People sx={{ color: "green" }} />
+  </ListItemIcon>
+  <ListItemText primary="Employees" sx={{ color: "white" }} />
+</ListItemButton>
 
           <ListItemButton
-            component={Link}
-            to="/dashboard/attendance-overview"
-            selected={location.pathname === "/dashboard/attendance-overview"}
-          >
-            <ListItemIcon>
-              <Assignment sx={{ color: "#AFEEEE" }} />
-            </ListItemIcon>
-            <ListItemText primary="Attendance Overview" sx={{ color: "white" }} />
-          </ListItemButton>
+  component={Link}
+  to="/dashboard/attendance-overview"
+  selected={location.pathname === "/dashboard/attendance-overview"}
+>
+  <ListItemIcon>
+    <AccessTime sx={{ color: "#AFEEEE" }} />
+  </ListItemIcon>
+  <ListItemText primary="Attendance Overview" sx={{ color: "white" }} />
+</ListItemButton>
 
           <ListItemButton
             component="a"
@@ -239,6 +242,20 @@ const Dashboard = () => {
             <ListItemText primary="Attendance" sx={{ color: "white" }} />
           </ListItemButton>
 
+          <ListItemButton
+  component={Link}
+  to="/dashboard/payroll"
+  selected={location.pathname === "/dashboard/payroll"}
+>
+  <ListItemIcon>
+    <MonetizationOn sx={{ color: "#4caf50" }} /> {/* Green for money */}
+  </ListItemIcon>
+  <ListItemText primary="Payroll Overview" sx={{ color: "white" }} />
+</ListItemButton>
+
+
+            
+
           <Divider sx={{ my: 2, borderColor: "rgba(255,255,255,0.2)" }} />
 
           <ListItemButton
@@ -251,6 +268,7 @@ const Dashboard = () => {
             </ListItemIcon>
             <ListItemText primary="Settings" sx={{ color: "white" }} />
           </ListItemButton>
+        
         </List>
       </Box>
 

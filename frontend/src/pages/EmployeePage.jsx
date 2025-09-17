@@ -22,10 +22,13 @@ import {
   useMediaQuery,
   Stack,
   Tooltip,
+  Pagination,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
-import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import { Delete, Edit } from "@mui/icons-material";
-
 import axios from "../api/axios";
 
 // ✅ Export imports
@@ -41,7 +44,7 @@ const EmployeePage = () => {
     fullName: "",
     position: "",
     birthdate: "",
-    hireDate :"",
+    hireDate: "",
     age: "",
     status: "",
     address: "",
@@ -49,14 +52,25 @@ const EmployeePage = () => {
     email: "",
     department: "",
     salary: "",
+    ratePerHour: "",
+    deductions: "",
     emergencyContact: { name: "", relation: "", phone: "" },
     profilePic: "",
   });
-  const [file, setFile] = useState(null); // 👈 added for file upload
+  const [file, setFile] = useState(null);
   const [editId, setEditId] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [search, setSearch] = useState("");
-  const [viewEmployee, setViewEmployee] = useState(null); // 👈 for View Details dialog
+  const [viewEmployee, setViewEmployee] = useState(null);
+  const [formLoading, setFormLoading] = useState(false);
+
+  const [deleteId, setDeleteId] = useState(null); 
+  const [deleteLoading, setDeleteLoading] = useState(false); 
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false); 
+
+  // ✅ Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down("sm"));
@@ -76,76 +90,90 @@ const EmployeePage = () => {
     fetchEmployees();
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      let employeeData = { ...form };
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setFormLoading(true); // Start loading
 
-      if (editId) {
-        await axios.put(`/employees/${editId}`, employeeData);
+  try {
+    let employeeData = { ...form };
 
-        if (file) {
-          const formData = new FormData();
-          formData.append("profilePic", file);
-          await axios.post(`/employees/${editId}/upload-pic`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-        }
+    if (editId) {
+      await axios.put(`/employees/${editId}`, employeeData);
 
-        setOpenSnackbar({ open: true, msg: "Employee updated!" });
-      } else {
-        const { data } = await axios.post("/employees", employeeData);
-
-        if (file) {
-          const formData = new FormData();
-          formData.append("profilePic", file);
-          await axios.post(`/employees/${data._id}/upload-pic`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-        }
-
-        setOpenSnackbar({
-          open: true,
-          msg: `Employee added! Generated PIN: ${data.pincode}`,
+      if (file) {
+        const formData = new FormData();
+        formData.append("profilePic", file);
+        await axios.post(`/employees/${editId}/upload-pic`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
       }
 
-      setForm({
-        fullName: "",
-        position: "",
-        birthdate: "",
-        hireDate:"",
-        age: "",
-        status: "",
-        address: "",
-        phone: "",
-        email: "",
-        department: "",
-        salary: "",
-        emergencyContact: { name: "", relation: "", phone: "" },
-        profilePic: "",
+      setOpenSnackbar({ open: true, msg: "Employee updated!" });
+    } else {
+      const { data } = await axios.post("/employees", employeeData);
+
+      if (file) {
+        const formData = new FormData();
+        formData.append("profilePic", file);
+        await axios.post(`/employees/${data._id}/upload-pic`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      setOpenSnackbar({
+        open: true,
+        msg: `Employee added! Generated PIN: ${data.pincode}`,
       });
-      setFile(null);
-      setEditId(null);
-      setOpenDialog(false);
-      fetchEmployees();
-    } catch (err) {
-      setOpenSnackbar({ open: true, msg: err.response?.data?.msg || "Error" });
     }
-  };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this employee?")) return;
-    try {
-      await axios.delete(`/employees/${id}`);
-      setOpenSnackbar({ open: true, msg: "Employee deleted!" });
-      fetchEmployees();
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    setForm({
+      fullName: "",
+      position: "",
+      birthdate: "",
+      hireDate: "",
+      age: "",
+      status: "",
+      address: "",
+      phone: "",
+      email: "",
+      department: "",
+      salary: "",
+      ratePerHour: "",
+      deductions: "",
+      emergencyContact: { name: "", relation: "", phone: "" },
+      profilePic: "",
+    });
+    setFile(null);
+    setEditId(null);
+    setOpenDialog(false);
+    fetchEmployees();
+  } catch (err) {
+    setOpenSnackbar({ open: true, msg: err.response?.data?.msg || "Error" });
+  } finally {
+    setFormLoading(false); // Stop loading
+  }
+};
 
-  // Edit handler
+
+const confirmDelete = async () => {
+  if (!deleteId) return;
+  setDeleteLoading(true);
+
+  try {
+    await axios.delete(`/employees/${deleteId}`);
+    setOpenSnackbar({ open: true, msg: "Employee deleted!" });
+    fetchEmployees();
+    setOpenDeleteDialog(false);
+  } catch (err) {
+    console.error(err);
+    setOpenSnackbar({ open: true, msg: err.response?.data?.msg || "Error deleting employee" });
+  } finally {
+    setDeleteLoading(false);
+    setDeleteId(null);
+  }
+};
+
+
   const handleEdit = (employee) => {
     setForm({
       fullName: employee.fullName || "",
@@ -159,11 +187,9 @@ const EmployeePage = () => {
       email: employee.email || "",
       department: employee.department || "",
       salary: employee.salary || "",
-      emergencyContact: employee.emergencyContact || {
-        name: "",
-        relation: "",
-        phone: "",
-      },
+      ratePerHour: employee.ratePerHour || "",
+      deductions: employee.deductions || "",
+      emergencyContact: employee.emergencyContact || { name: "", relation: "", phone: "" },
       profilePic: employee.profilePic || "",
     });
     setEditId(employee._id);
@@ -176,6 +202,16 @@ const EmployeePage = () => {
       emp.pincode.includes(search)
   );
 
+  // ✅ Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentEmployees = filteredEmployees.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
+
   // ✅ Export to Excel
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
@@ -183,9 +219,7 @@ const EmployeePage = () => {
         "Full Name": emp.fullName,
         Position: emp.position,
         PIN: emp.pincode,
-        "Created Date": emp.createdAt
-          ? new Date(emp.createdAt).toLocaleString()
-          : "-",
+        "Created Date": emp.createdAt ? new Date(emp.createdAt).toLocaleString() : "-",
       }))
     );
     const workbook = XLSX.utils.book_new();
@@ -212,12 +246,7 @@ const EmployeePage = () => {
   };
 
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      p={{ xs: 2, sm: 3 }}
-    >
+    <Box display="flex" flexDirection="column" alignItems="center" p={{ xs: 2, sm: 3 }}>
       <Typography variant={isSm ? "h5" : "h4"} mb={3} fontWeight="bold">
         Employee Management
       </Typography>
@@ -245,7 +274,6 @@ const EmployeePage = () => {
           Add Employee
         </Button>
 
-        {/* Export Buttons */}
         <Button variant="contained" color="success" onClick={exportToExcel}>
           Export Excel
         </Button>
@@ -264,154 +292,105 @@ const EmployeePage = () => {
           No employees found.
         </Typography>
       ) : (
-        <TableContainer
-          component={Paper}
-          sx={{
-            borderRadius: 2,
-            width: { xs: "100%", sm: "70%", md: "60%" },
-          }}
-        >
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell><strong>Profile</strong></TableCell>
-                <TableCell><strong>Full Name</strong></TableCell>
-                <TableCell><strong>Position</strong></TableCell>
-                <TableCell><strong>Phone</strong></TableCell>
-                <TableCell><strong>Status</strong></TableCell>
-                <TableCell><strong>PIN</strong></TableCell>
-                <TableCell align="center"><strong>Actions</strong></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredEmployees.map((emp) => (
-                <TableRow key={emp._id} hover>
-                  <TableCell>
-                    <img
-                      src={emp.profilePic || "https://via.placeholder.com/40"}
-                      alt="profile"
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell
-                    sx={{ cursor: "pointer", color: "primary.main" }}
-                    onClick={() => setViewEmployee(emp)}
-                  >
-                    {emp.fullName}
-                  </TableCell>
-                  <TableCell>{emp.position}</TableCell>
-                  <TableCell>{emp.phone || "-"}</TableCell>
-                  <TableCell>{emp.status || "-"}</TableCell>
-                  <TableCell>{emp.pincode}</TableCell>
-                  <TableCell align="center">
-                    <IconButton color="primary" onClick={() => handleEdit(emp)}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(emp._id)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
+        <>
+          <TableContainer
+            component={Paper}
+            sx={{ borderRadius: 2, width: { xs: "100%", sm: "70%", md: "60%" } }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell><strong>Profile</strong></TableCell>
+                  <TableCell><strong>Full Name</strong></TableCell>
+                  <TableCell><strong>Position</strong></TableCell>
+                  <TableCell><strong>Phone</strong></TableCell>
+                  <TableCell><strong>Status</strong></TableCell>
+                  <TableCell><strong>PIN</strong></TableCell>
+                  <TableCell align="center"><strong>Actions</strong></TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {currentEmployees.map((emp) => (
+                  <TableRow key={emp._id} hover>
+                    <TableCell>
+                      <img
+                        src={emp.profilePic || "https://via.placeholder.com/40"}
+                        alt="profile"
+                        style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover" }}
+                      />
+                    </TableCell>
+                    <TableCell
+                      sx={{ cursor: "pointer", color: "primary.main" }}
+                      onClick={() => setViewEmployee(emp)}
+                    >
+                      {emp.fullName}
+                    </TableCell>
+                    <TableCell>{emp.position}</TableCell>
+                    <TableCell>{emp.phone || "-"}</TableCell>
+                    <TableCell>{emp.status || "-"}</TableCell>
+                    <TableCell>{emp.pincode}</TableCell>
+                    <TableCell align="center">
+                      <IconButton color="primary" onClick={() => handleEdit(emp)}>
+                        <Edit />
+                      </IconButton>
+                      <IconButton
+  color="error"
+  onClick={() => {
+    setDeleteId(emp._id);
+    setOpenDeleteDialog(true);
+  }}
+>
+  <Delete />
+</IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Box mt={2}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                siblingCount={2}
+                boundaryCount={1}
+              />
+            </Box>
+          )}
+        </>
       )}
 
       {/* Add/Edit Dialog */}
-      <Dialog
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        fullWidth
-        maxWidth="sm"
-      >
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="sm">
         <DialogTitle sx={{ fontWeight: "bold" }}>
           {editId ? "Edit Employee" : "Add Employee"}
         </DialogTitle>
         <DialogContent>
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              mt: 1,
-            }}
-          >
-            {/* Profile Picture Upload */}
+          <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
             <Button variant="contained" component="label">
               {file ? "Change Profile Picture" : "Upload Profile Picture"}
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={(e) => setFile(e.target.files[0])}
-              />
+              <input type="file" hidden accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
             </Button>
             {(file || form.profilePic) && (
               <Box mt={2} textAlign="center">
-                <img
-                  src={file ? URL.createObjectURL(file) : form.profilePic}
-                  alt="preview"
-                  style={{ width: 100, height: 100, borderRadius: "50%" }}
-                />
+                <img src={file ? URL.createObjectURL(file) : form.profilePic} alt="preview" style={{ width: 100, height: 100, borderRadius: "50%" }} />
               </Box>
             )}
 
             {/* Other fields */}
-            <TextField
-              label="Full Name"
-              value={form.fullName}
-              onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              required
-              fullWidth
-            />
-            <TextField
-              label="Position"
-              value={form.position}
-              onChange={(e) => setForm({ ...form, position: e.target.value })}
-              required
-              fullWidth
-            />
-            <TextField
-              label="Birthdate"
-              type="date"
-              value={form.birthdate}
-              onChange={(e) => setForm({ ...form, birthdate: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-              <TextField
-              label="Hire Date"
-              type="date"
-              value={form.hireDate}
-              onChange={(e) => setForm({ ...form, hireDate: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-            <TextField
-              label="Age"
-              type="number"
-              value={form.age}
-              onChange={(e) => setForm({ ...form, age: e.target.value })}
-              fullWidth
-            />
+            <TextField label="Full Name" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} required fullWidth />
+            <TextField label="Position" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} required fullWidth />
+            <TextField label="Birthdate" type="date" value={form.birthdate} onChange={(e) => setForm({ ...form, birthdate: e.target.value })} InputLabelProps={{ shrink: true }} fullWidth />
+            <TextField label="Hire Date" type="date" value={form.hireDate} onChange={(e) => setForm({ ...form, hireDate: e.target.value })} InputLabelProps={{ shrink: true }} fullWidth />
+            <TextField label="Age" type="number" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} fullWidth />
             <FormControl fullWidth>
               <InputLabel>Status</InputLabel>
-              <Select
-                value={form.status}
-                label="Status"
-                onChange={(e) => setForm({ ...form, status: e.target.value })}
-              >
+              <Select value={form.status} label="Status" onChange={(e) => setForm({ ...form, status: e.target.value })}>
                 <MenuItem value="Single">Single</MenuItem>
                 <MenuItem value="Married">Married</MenuItem>
                 <MenuItem value="Widowed">Widowed</MenuItem>
@@ -419,123 +398,47 @@ const EmployeePage = () => {
                 <MenuItem value="Other">Other</MenuItem>
               </Select>
             </FormControl>
-            <TextField
-              label="Address"
-              value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Phone"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Email"
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Department"
-              value={form.department}
-              onChange={(e) => setForm({ ...form, department: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Salary"
-              type="number"
-              value={form.salary}
-              onChange={(e) => setForm({ ...form, salary: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Emergency Contact Name"
-              value={form.emergencyContact?.name || ""}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  emergencyContact: {
-                    ...form.emergencyContact,
-                    name: e.target.value,
-                  },
-                })
-              }
-              fullWidth
-            />
-            <TextField
-              label="Emergency Contact Relation"
-              value={form.emergencyContact?.relation || ""}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  emergencyContact: {
-                    ...form.emergencyContact,
-                    relation: e.target.value,
-                  },
-                })
-              }
-              fullWidth
-            />
-            <TextField
-              label="Emergency Contact Phone"
-              value={form.emergencyContact?.phone || ""}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  emergencyContact: {
-                    ...form.emergencyContact,
-                    phone: e.target.value,
-                  },
-                })
-              }
-              fullWidth
-            />
+            <TextField label="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} fullWidth />
+            <TextField label="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} fullWidth />
+            <TextField label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} fullWidth />
+            <TextField label="Department" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} fullWidth />
+            <TextField label="Salary" type="number" value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} fullWidth />
+            <TextField label="Rate Per Hour" type="number" value={form.ratePerHour} onChange={(e) => setForm({ ...form, ratePerHour: e.target.value })} fullWidth />
+            <TextField label="Deductions" type="number" value={form.deductions} onChange={(e) => setForm({ ...form, deductions: e.target.value })} fullWidth />
+            <TextField label="Emergency Contact Name" value={form.emergencyContact?.name || ""} onChange={(e) => setForm({ ...form, emergencyContact: { ...form.emergencyContact, name: e.target.value } })} fullWidth />
+            <TextField label="Emergency Contact Relation" value={form.emergencyContact?.relation || ""} onChange={(e) => setForm({ ...form, emergencyContact: { ...form.emergencyContact, relation: e.target.value } })} fullWidth />
+            <TextField label="Emergency Contact Phone" value={form.emergencyContact?.phone || ""} onChange={(e) => setForm({ ...form, emergencyContact: { ...form.emergencyContact, phone: e.target.value } })} fullWidth />
 
             <DialogActions sx={{ px: 0, pt: 2 }}>
               <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-              <Button type="submit" variant="contained" color="primary">
-                {editId ? "Update" : "Create"}
-              </Button>
+              <Button
+  type="submit"
+  variant="contained"
+  color="primary"
+  disabled={formLoading}
+  startIcon={formLoading && <CircularProgress size={20} />}
+>
+  {editId ? "Update" : "Create"}
+</Button>
+
             </DialogActions>
           </Box>
         </DialogContent>
       </Dialog>
 
       {/* View Details Dialog */}
-      <Dialog
-        open={!!viewEmployee}
-        onClose={() => setViewEmployee(null)}
-        fullWidth
-        maxWidth="sm"
-      >
+      <Dialog open={!!viewEmployee} onClose={() => setViewEmployee(null)} fullWidth maxWidth="sm">
         <DialogTitle>Employee Details</DialogTitle>
         <DialogContent dividers>
           {viewEmployee && (
             <Box display="flex" flexDirection="column" gap={1}>
               <Box display="flex" justifyContent="center" mb={2}>
-                <img
-                  src={viewEmployee.profilePic || "https://via.placeholder.com/80"}
-                  alt="profile"
-                  style={{ width: 80, height: 80, borderRadius: "50%" }}
-                />
+                <img src={viewEmployee.profilePic || "https://via.placeholder.com/80"} alt="profile" style={{ width: 80, height: 80, borderRadius: "50%" }} />
               </Box>
               <Typography><strong>Name:</strong> {viewEmployee.fullName}</Typography>
-              <Typography>
-  <strong>Hire Date:</strong>{" "}
-  {viewEmployee.hireDate
-    ? new Date(viewEmployee.hireDate).toLocaleDateString()
-    : "-"}
-</Typography>
+              <Typography><strong>Hire Date:</strong> {viewEmployee.hireDate ? new Date(viewEmployee.hireDate).toLocaleDateString() : "-"}</Typography>
               <Typography><strong>Position:</strong> {viewEmployee.position}</Typography>
-              <Typography>
-                <strong>Birthdate:</strong>{" "}
-                {viewEmployee.birthdate
-                  ? new Date(viewEmployee.birthdate).toLocaleDateString()
-                  : "-"}
-              </Typography>
+              <Typography><strong>Birthdate:</strong> {viewEmployee.birthdate ? new Date(viewEmployee.birthdate).toLocaleDateString() : "-"}</Typography>
               <Typography><strong>Age:</strong> {viewEmployee.age || "-"}</Typography>
               <Typography><strong>Status:</strong> {viewEmployee.status || "-"}</Typography>
               <Typography><strong>Address:</strong> {viewEmployee.address || "-"}</Typography>
@@ -543,12 +446,9 @@ const EmployeePage = () => {
               <Typography><strong>Email:</strong> {viewEmployee.email || "-"}</Typography>
               <Typography><strong>Department:</strong> {viewEmployee.department || "-"}</Typography>
               <Typography><strong>Salary:</strong> {viewEmployee.salary || "-"}</Typography>
-              <Typography>
-                <strong>Emergency Contact:</strong>{" "}
-                {viewEmployee.emergencyContact
-                  ? `${viewEmployee.emergencyContact.name} (${viewEmployee.emergencyContact.relation}) - ${viewEmployee.emergencyContact.phone}`
-                  : "-"}
-              </Typography>
+              <Typography><strong>Rate Per Hour:</strong> {viewEmployee.ratePerHour || "-"}</Typography>
+              <Typography><strong>Deductions:</strong> {viewEmployee.deductions || "-"}</Typography>
+              <Typography><strong>Emergency Contact:</strong> {viewEmployee.emergencyContact ? `${viewEmployee.emergencyContact.name} (${viewEmployee.emergencyContact.relation}) - ${viewEmployee.emergencyContact.phone}` : "-"}</Typography>
             </Box>
           )}
         </DialogContent>
@@ -556,6 +456,37 @@ const EmployeePage = () => {
           <Button onClick={() => setViewEmployee(null)}>Close</Button>
         </DialogActions>
       </Dialog>
+      <Dialog
+  open={openDeleteDialog}
+  onClose={() => setOpenDeleteDialog(false)}
+  fullWidth
+  maxWidth="xs"
+>
+  <DialogTitle>Confirm Delete</DialogTitle>
+  <DialogContent>
+    <Typography>
+      Are you sure you want to delete this employee? This action cannot be undone.
+    </Typography>
+  </DialogContent>
+  <DialogActions>
+    <Button
+      onClick={() => setOpenDeleteDialog(false)}
+      disabled={deleteLoading}
+    >
+      Cancel
+    </Button>
+    <Button
+      variant="contained"
+      color="error"
+      onClick={confirmDelete}
+      disabled={deleteLoading}
+      startIcon={deleteLoading && <CircularProgress size={20} />}
+    >
+      Delete
+    </Button>
+  </DialogActions>
+</Dialog>
+
 
       <Snackbar
         open={openSnackbar.open}

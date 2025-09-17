@@ -19,6 +19,8 @@ const employeeSchema = new mongoose.Schema(
     department: { type: String },
     hireDate: { type: Date, default: Date.now },
     salary: { type: Number },
+    ratePerHour: { type: Number, default: 0 },
+    deductions: { type: Number, default: 0 },
     emergencyContact: {
       name: String,
       relation: String,

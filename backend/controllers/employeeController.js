@@ -27,6 +27,8 @@ export const createEmployee = async (req, res) => {
       email,
       department,
       salary,
+      ratePerHour,    
+      deductions,
       emergencyContact,
     } = req.body;
 
@@ -36,7 +38,7 @@ export const createEmployee = async (req, res) => {
       fullName,
       position,
       birthdate,
-      hireDate, // ✅ added
+      hireDate, 
       age,
       status,
       address,
@@ -44,6 +46,8 @@ export const createEmployee = async (req, res) => {
       email,
       department,
       salary,
+      ratePerHour,    
+      deductions,    
       emergencyContact,
       pincode,
       user: req.user.id,

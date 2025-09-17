@@ -15,6 +15,7 @@ import {
   Button,
   useTheme,
   useMediaQuery,
+  Pagination,
 } from "@mui/material";
 import axios from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
@@ -30,6 +31,10 @@ const AttendanceOverview = () => {
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  // ✅ Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down("sm"));
@@ -65,6 +70,19 @@ const AttendanceOverview = () => {
       a.employee.pincode.includes(search)
     );
   });
+
+  // ✅ Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentAttendances = filteredAttendances.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredAttendances.length / itemsPerPage);
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
 
   // Function to calculate total hours in HH:MM:SS format
   const calculateTotalHours = (a) => {
@@ -211,56 +229,54 @@ const AttendanceOverview = () => {
           No attendance records found.
         </Typography>
       ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 2, maxWidth: 1000 }}>
-          <Table>
-            <TableHead sx={{ backgroundColor: theme.palette.grey[100] }}>
-              <TableRow>
-                <TableCell>
-                  <b>Date</b>
-                </TableCell>
-                <TableCell>
-                  <b>Full Name</b>
-                </TableCell>
-                <TableCell>
-                  <b>Position</b>
-                </TableCell>
-                <TableCell>
-                  <b>PIN</b>
-                </TableCell>
-                <TableCell>
-                  <b>Check In</b>
-                </TableCell>
-                <TableCell>
-                  <b>Break Out</b>
-                </TableCell>
-                <TableCell>
-                  <b>Break In</b>
-                </TableCell>
-                <TableCell>
-                  <b>Check Out</b>
-                </TableCell>
-                <TableCell>
-                  <b>Total Hours</b>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredAttendances.map((a) => (
-                <TableRow key={a._id} hover>
-                  <TableCell>{a.date ? new Date(a.date).toLocaleDateString() : "-"}</TableCell>
-                  <TableCell>{a.employee.fullName}</TableCell>
-                  <TableCell>{a.employee.position}</TableCell>
-                  <TableCell>{a.employee.pincode}</TableCell>
-                  <TableCell>{a.checkIn ? new Date(a.checkIn).toLocaleTimeString() : "-"}</TableCell>
-                  <TableCell>{a.breakOut ? new Date(a.breakOut).toLocaleTimeString() : "-"}</TableCell>
-                  <TableCell>{a.breakIn ? new Date(a.breakIn).toLocaleTimeString() : "-"}</TableCell>
-                  <TableCell>{a.checkOut ? new Date(a.checkOut).toLocaleTimeString() : "-"}</TableCell>
-                  <TableCell>{calculateTotalHours(a)}</TableCell>
+        <>
+          <TableContainer component={Paper} sx={{ borderRadius: 2, maxWidth: 1000 }}>
+            <Table>
+              <TableHead sx={{ backgroundColor: theme.palette.grey[100] }}>
+                <TableRow>
+                  <TableCell><b>Date</b></TableCell>
+                  <TableCell><b>Full Name</b></TableCell>
+                  <TableCell><b>Position</b></TableCell>
+                  <TableCell><b>PIN</b></TableCell>
+                  <TableCell><b>Check In</b></TableCell>
+                  <TableCell><b>Break Out</b></TableCell>
+                  <TableCell><b>Break In</b></TableCell>
+                  <TableCell><b>Check Out</b></TableCell>
+                  <TableCell><b>Total Hours</b></TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {currentAttendances.map((a) => (
+                  <TableRow key={a._id} hover>
+                    <TableCell>{a.date ? new Date(a.date).toLocaleDateString() : "-"}</TableCell>
+                    <TableCell>{a.employee.fullName}</TableCell>
+                    <TableCell>{a.employee.position}</TableCell>
+                    <TableCell>{a.employee.pincode}</TableCell>
+                    <TableCell>{a.checkIn ? new Date(a.checkIn).toLocaleTimeString() : "-"}</TableCell>
+                    <TableCell>{a.breakOut ? new Date(a.breakOut).toLocaleTimeString() : "-"}</TableCell>
+                    <TableCell>{a.breakIn ? new Date(a.breakIn).toLocaleTimeString() : "-"}</TableCell>
+                    <TableCell>{a.checkOut ? new Date(a.checkOut).toLocaleTimeString() : "-"}</TableCell>
+                    <TableCell>{calculateTotalHours(a)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Box mt={2}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                siblingCount={2}
+                boundaryCount={1}
+              />
+            </Box>
+          )}
+        </>
       )}
     </Box>
   );

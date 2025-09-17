@@ -15,6 +15,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import Profile from "./pages/Profile.jsx";
 import Settings  from "./pages/Settings.jsx";
+import PayrollOverview from "./pages/PayrollOverview";
 
 // ProtectedRoute
 const ProtectedRoute = ({ user, children }) => {
@@ -52,6 +53,7 @@ const App = () => {
                 <Route path="attendance-overview" element={<AttendanceOverview />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="payroll" element={<PayrollOverview />} />
               </Route>
 
               <Route path="/attendance" element={<Attendance />} />

@@ -11,8 +11,8 @@ import {
   IconButton,
 } from '@mui/material';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
-import axios from '../api/axios';
-import { AuthContext } from '../context/AuthContext';
+import axios from '../../api/axios';
+import { AuthContext } from '../../context/AuthContext';
 
 const Profile = () => {
   const { user, setUser } = useContext(AuthContext);

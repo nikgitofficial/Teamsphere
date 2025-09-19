@@ -12,6 +12,7 @@ import payrollRoutes from "./routes/payrollRoutes.js";
 
 
 
+
 dotenv.config();
 const app = express();
 
@@ -48,6 +49,7 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use('/api/profile', profileRoutes);
 app.use("/api/payroll", payrollRoutes);
+
 
 
 

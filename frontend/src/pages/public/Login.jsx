@@ -15,8 +15,8 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "../api/axios";
-import { AuthContext } from "../context/AuthContext";
+import axios from "../../api/axios";
+import { AuthContext } from "../../context/AuthContext";
 
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });

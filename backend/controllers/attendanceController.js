@@ -12,7 +12,10 @@ const todayRange = () => {
 
 // Format response with employee populated
 const sendResponse = async (res, msg, attendanceId) => {
-  const populated = await Attendance.findById(attendanceId).populate("employee", "fullName position pincode profilePic")
+  const populated = await Attendance.findById(attendanceId).populate(
+    "employee",
+    "fullName position pincode profilePic shift"
+  );
 
   res.json({ msg, attendance: populated });
 };
@@ -30,15 +33,16 @@ export const checkIn = async (req, res) => {
       date: { $gte: start, $lte: end },
     });
 
-    if (attendance?.checkIn) {
-      return res.status(400).json({ msg: "Already checked in today" });
+    // 🔄 Fallback: if no record today, fetch latest regardless of date
+    if (!attendance) {
+      attendance = await Attendance.findOne({ employee: employee._id }).sort({ date: -1 });
     }
 
     if (!attendance) {
       attendance = new Attendance({ employee: employee._id, date: new Date() });
     }
 
-    attendance.checkIn = new Date();
+    attendance.checkIns.push(new Date());
     await attendance.save();
 
     await sendResponse(res, "✅ Successfully Checked In", attendance._id);
@@ -55,18 +59,19 @@ export const breakOut = async (req, res) => {
     if (!employee) return res.status(404).json({ msg: "Invalid pincode" });
 
     const { start, end } = todayRange();
-    const attendance = await Attendance.findOne({
+    let attendance = await Attendance.findOne({
       employee: employee._id,
       date: { $gte: start, $lte: end },
     });
 
-    if (!attendance?.checkIn)
+    if (!attendance) {
+      attendance = await Attendance.findOne({ employee: employee._id }).sort({ date: -1 });
+    }
+
+    if (!attendance?.checkIns.length)
       return res.status(400).json({ msg: "You must check in first" });
 
-    if (attendance.breakOut)
-      return res.status(400).json({ msg: "Already recorded break out" });
-
-    attendance.breakOut = new Date();
+    attendance.breakOuts.push(new Date());
     await attendance.save();
 
     await sendResponse(res, "✅ Break Out recorded", attendance._id);
@@ -83,18 +88,19 @@ export const breakIn = async (req, res) => {
     if (!employee) return res.status(404).json({ msg: "Invalid pincode" });
 
     const { start, end } = todayRange();
-    const attendance = await Attendance.findOne({
+    let attendance = await Attendance.findOne({
       employee: employee._id,
       date: { $gte: start, $lte: end },
     });
 
-    if (!attendance?.breakOut)
+    if (!attendance) {
+      attendance = await Attendance.findOne({ employee: employee._id }).sort({ date: -1 });
+    }
+
+    if (!attendance?.breakOuts.length)
       return res.status(400).json({ msg: "You must break out first" });
 
-    if (attendance.breakIn)
-      return res.status(400).json({ msg: "Already recorded break in" });
-
-    attendance.breakIn = new Date();
+    attendance.breakIns.push(new Date());
     await attendance.save();
 
     await sendResponse(res, "✅ Break In recorded", attendance._id);
@@ -111,18 +117,19 @@ export const checkOut = async (req, res) => {
     if (!employee) return res.status(404).json({ msg: "Invalid pincode" });
 
     const { start, end } = todayRange();
-    const attendance = await Attendance.findOne({
+    let attendance = await Attendance.findOne({
       employee: employee._id,
       date: { $gte: start, $lte: end },
     });
 
-    if (!attendance?.checkIn)
+    if (!attendance) {
+      attendance = await Attendance.findOne({ employee: employee._id }).sort({ date: -1 });
+    }
+
+    if (!attendance?.checkIns.length)
       return res.status(400).json({ msg: "You must check in first" });
 
-    if (attendance.checkOut)
-      return res.status(400).json({ msg: "Already checked out today" });
-
-    attendance.checkOut = new Date();
+    attendance.checkOuts.push(new Date());
     await attendance.save();
 
     await sendResponse(res, "✅ Checked Out successfully", attendance._id);
@@ -130,6 +137,7 @@ export const checkOut = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
+
 
 // ✅ Get today's attendance by pincode
 export const getTodayAttendance = async (req, res) => {
@@ -142,9 +150,10 @@ export const getTodayAttendance = async (req, res) => {
     const attendance = await Attendance.findOne({
       employee: employee._id,
       date: { $gte: start, $lte: end },
-    }).populate("employee", "fullName position pincode profilePic");
+    }).populate("employee", "fullName position pincode profilePic shift");
 
-    if (!attendance) return res.json({ msg: "No attendance today", attendance: null });
+    if (!attendance)
+      return res.json({ msg: "No attendance today", attendance: null });
 
     res.json({ msg: "✅ Attendance found", attendance });
   } catch (err) {
@@ -162,7 +171,7 @@ export const getAllTodayAttendances = async (req, res) => {
     const attendances = await Attendance.find({
       employee: { $in: employeeIds },
       date: { $gte: start, $lte: end },
-    }).populate("employee", "fullName position pincode profilePic");
+    }).populate("employee", "fullName position pincode profilePic shift");
 
     res.json({ msg: "✅ All attendances today", attendances });
   } catch (err) {
@@ -173,14 +182,12 @@ export const getAllTodayAttendances = async (req, res) => {
 // ✅ Get all attendances for this user (no date filter)
 export const getAllAttendances = async (req, res) => {
   try {
-    // Get all employees of the logged-in user
     const userEmployees = await Employee.find({ user: req.user.id });
     const employeeIds = userEmployees.map((e) => e._id);
 
-    // Find all attendance records for those employees
     const attendances = await Attendance.find({
       employee: { $in: employeeIds },
-    }).populate("employee", "fullName position pincode profilePic");
+    }).populate("employee", "fullName position pincode profilePic shift");
 
     res.json({ msg: "✅ All attendances retrieved", attendances });
   } catch (err) {
@@ -191,7 +198,7 @@ export const getAllAttendances = async (req, res) => {
 // ✅ Get attendances by date range
 export const getAttendancesByDateRange = async (req, res) => {
   try {
-    const { start, end } = req.query; // expecting ISO date strings
+    const { start, end } = req.query;
     if (!start || !end)
       return res.status(400).json({ msg: "Start and end dates are required" });
 
@@ -207,11 +214,10 @@ export const getAttendancesByDateRange = async (req, res) => {
     const attendances = await Attendance.find({
       employee: { $in: employeeIds },
       date: { $gte: startDate, $lte: endDate },
-    }).populate("employee", "fullName position pincode profilePic");
+    }).populate("employee", "fullName position pincode profilePic shift");
 
     res.json({ msg: "✅ Attendances fetched", attendances });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
 };
-

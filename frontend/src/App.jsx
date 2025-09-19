@@ -3,19 +3,22 @@ import { useContext } from "react";
 import { Box } from "@mui/material";
 import { AuthContext } from "./context/AuthContext";
 import Layout from "./layouts/Layout"; 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Login from "./pages/public/Login.jsx";
+import Register from "./pages/public/Register.jsx";
 import Dashboard from "./components/Dashboard";
-import Home from "./pages/Home";
-import Attendance from "./pages/Attendance";
-import AttendanceOverview from "./pages/AttendanceOverview";
-import EmployeePage from "./pages/EmployeePage";
-import ForgotPassword from "./pages/ForgotPassword"; 
+import Home from "./pages/userpage/Home";
+import Attendance from "./pages/userpage/Attendance.jsx";
+import AttendanceOverview from "./pages/userpage/AttendanceOverview.jsx";
+import EmployeePage from "./pages/userpage/EmployeePage.jsx";
+import ForgotPassword from "./pages/public/ForgotPassword.jsx"; 
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import Profile from "./pages/Profile.jsx";
-import Settings  from "./pages/Settings.jsx";
-import PayrollOverview from "./pages/PayrollOverview";
+import Profile from "./pages/userpage/Profile.jsx";
+import Settings  from "./pages/userpage/Settings.jsx";
+import PayrollOverview from "./pages/userpage/PayrollOverview";
+
+//public page
+import About from "./pages/public/About.jsx";
 
 // ProtectedRoute
 const ProtectedRoute = ({ user, children }) => {
@@ -42,6 +45,11 @@ const App = () => {
             <Route path="/login" element={!user ? <Login /> : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />} />
             <Route path="/register" element={!user ? <Register /> : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />} />
             <Route path="/forgot-password" element={!user ? <ForgotPassword /> : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />} />
+            
+            {/*public route*/}
+            <Route path="/about" element={<About />} />
+
+
 
             {/* Protected routes */}
             <Route element={<ProtectedRoute user={user}><Layout /></ProtectedRoute>}>

@@ -13,7 +13,7 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import axios from "../api/axios";
+import axios from "../../api/axios";
 
 const Register = () => {
   const [form, setForm] = useState({

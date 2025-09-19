@@ -1,4 +1,3 @@
-// models/Employee.js
 import mongoose from "mongoose";
 
 const employeeSchema = new mongoose.Schema(
@@ -12,7 +11,11 @@ const employeeSchema = new mongoose.Schema(
     // ✅ New Fields
     birthdate: { type: Date },
     age: { type: Number },
-    status: { type: String, enum: ["Single", "Married", "Widowed", "Separated", "Other"], default: "Single" },
+    status: { 
+      type: String, 
+      enum: ["Single", "Married", "Widowed", "Separated", "Other"], 
+      default: "Single" 
+    },
     address: { type: String },
     phone: { type: String },
     email: { type: String },
@@ -20,7 +23,15 @@ const employeeSchema = new mongoose.Schema(
     hireDate: { type: Date, default: Date.now },
     salary: { type: Number },
     ratePerHour: { type: Number, default: 0 },
+    sss: { type: String },
+    tin: { type: String },
+    pagibig: { type: String },
+    philhealth: { type: String },
     deductions: { type: Number, default: 0 },
+
+    // ✅ New Shift Field (ex: "7am-4pm")
+    shift: { type: String, default: "8am-5pm" },
+
     emergencyContact: {
       name: String,
       relation: String,

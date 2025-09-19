@@ -15,8 +15,8 @@ import {
   Stack,
   Avatar,
 } from "@mui/material";
-import axios from "../api/axios";
-import { AuthContext } from "../context/AuthContext";
+import axios from "../../api/axios";
+import { AuthContext } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const Attendance = () => {
@@ -55,10 +55,10 @@ const Attendance = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch today's attendances
+  // Fetch all attendances (continuous, not just today)
   const fetchAllAttendances = async () => {
     try {
-      const res = await axios.get(`/attendance/today/all`, {
+      const res = await axios.get(`/attendance/all`, {  // updated endpoint
         headers: { Authorization: `Bearer ${accessToken}` },
         withCredentials: true,
       });
@@ -80,10 +80,18 @@ const Attendance = () => {
         withCredentials: true,
       });
       setMessage(res.data.msg);
+
+      // Store / remove lock
       localStorage.setItem("pincode", pincode);
       if (action !== "checkout") localStorage.setItem("attendanceLocked", "true");
       else localStorage.removeItem("attendanceLocked");
+
+      // Refresh attendance list
       fetchAllAttendances();
+
+      // ✅ Clear pincode field after button click
+      setPincode("");
+      localStorage.removeItem("pincode");
     } catch (err) {
       setMessage(err.response?.data?.msg || "Error recording attendance");
     }
@@ -118,11 +126,11 @@ const Attendance = () => {
 
       {attendances.length > 0 && (
         <TableContainer component={Paper} elevation={3} sx={{ width: "100%", maxWidth: 900 }}>
-          <Typography variant="h6" sx={{ p: 2 }}>Today's Attendance</Typography>
+          <Typography variant="h6" sx={{ p: 2 }}>Attendance Records</Typography> {/* updated title */}
           <Table>
             <TableHead>
               <TableRow>
-                {["Employee", "Date", "Check In", "Break Out", "Break In", "Check Out"].map((header) => (
+                {["Employee", "Date", "Check In(s)", "Break Out(s)", "Break In(s)", "Check Out(s)"].map((header) => (
                   <TableCell key={header} sx={{ fontWeight: "bold" }}>{header}</TableCell>
                 ))}
               </TableRow>
@@ -145,10 +153,26 @@ const Attendance = () => {
                   <TableCell>
                     {a.date ? new Date(a.date).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "-"}
                   </TableCell>
-                  <TableCell>{a.checkIn ? new Date(a.checkIn).toLocaleTimeString() : "-"}</TableCell>
-                  <TableCell>{a.breakOut ? new Date(a.breakOut).toLocaleTimeString() : "-"}</TableCell>
-                  <TableCell>{a.breakIn ? new Date(a.breakIn).toLocaleTimeString() : "-"}</TableCell>
-                  <TableCell>{a.checkOut ? new Date(a.checkOut).toLocaleTimeString() : "-"}</TableCell>
+                  <TableCell>
+                    {a.checkIns?.length ? a.checkIns.map((t, idx) => (
+                      <div key={idx}>{new Date(t).toLocaleTimeString()}</div>
+                    )) : "-"}
+                  </TableCell>
+                  <TableCell>
+                    {a.breakOuts?.length ? a.breakOuts.map((t, idx) => (
+                      <div key={idx}>{new Date(t).toLocaleTimeString()}</div>
+                    )) : "-"}
+                  </TableCell>
+                  <TableCell>
+                    {a.breakIns?.length ? a.breakIns.map((t, idx) => (
+                      <div key={idx}>{new Date(t).toLocaleTimeString()}</div>
+                    )) : "-"}
+                  </TableCell>
+                  <TableCell>
+                    {a.checkOuts?.length ? a.checkOuts.map((t, idx) => (
+                      <div key={idx}>{new Date(t).toLocaleTimeString()}</div>
+                    )) : "-"}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -13,8 +13,8 @@ import {
   IconButton,
 } from "@mui/material";
 import { PhotoCamera } from "@mui/icons-material";
-import axios from "../api/axios";
-import { AuthContext } from "../context/AuthContext";
+import axios from "../../api/axios";
+import { AuthContext } from "../../context/AuthContext";
 
 const Settings = () => {
   const { user, setUser, accessToken } = useContext(AuthContext);

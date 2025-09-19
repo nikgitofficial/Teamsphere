@@ -19,7 +19,7 @@ export const createEmployee = async (req, res) => {
       fullName,
       position,
       birthdate,
-      hireDate, // ✅ added
+      hireDate,
       age,
       status,
       address,
@@ -27,9 +27,14 @@ export const createEmployee = async (req, res) => {
       email,
       department,
       salary,
-      ratePerHour,    
+      ratePerHour,
+      sss,
+      tin,
+      pagibig,
+      philhealth,
       deductions,
       emergencyContact,
+      shift, // ✅ added
     } = req.body;
 
     const pincode = await generateUniquePincode();
@@ -38,7 +43,7 @@ export const createEmployee = async (req, res) => {
       fullName,
       position,
       birthdate,
-      hireDate, 
+      hireDate,
       age,
       status,
       address,
@@ -46,9 +51,14 @@ export const createEmployee = async (req, res) => {
       email,
       department,
       salary,
-      ratePerHour,    
-      deductions,    
+      ratePerHour,
+      sss,
+      tin,
+      pagibig,
+      philhealth,
+      deductions,
       emergencyContact,
+      shift, // ✅ save shift
       pincode,
       user: req.user.id,
     });
@@ -73,7 +83,7 @@ export const getEmployees = async (req, res) => {
 // Update employee (only if belongs to user)
 export const updateEmployee = async (req, res) => {
   try {
-    const updateData = { ...req.body }; // includes hireDate now
+    const updateData = { ...req.body }; // includes shift now
 
     const employee = await Employee.findOneAndUpdate(
       { _id: req.params.id, user: req.user.id },

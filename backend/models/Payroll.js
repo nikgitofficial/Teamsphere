@@ -4,7 +4,8 @@ const payrollSchema = new mongoose.Schema({
   employee: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
-  totalHours: { type: Number, default: 0 }, // in hours (decimal)
+  totalHours: { type: Number, default: 0 }, 
+  totalDays: { type: Number, default: 0 },  
   ratePerHour: { type: Number, default: 0 },
   grossPay: { type: Number, default: 0 },
   deductions: { type: Number, default: 0 },

@@ -27,6 +27,10 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Grid,
+  Divider,
+  Avatar,
+  Chip,
 } from "@mui/material";
 import { Delete, Edit } from "@mui/icons-material";
 import axios from "../../api/axios";
@@ -57,7 +61,16 @@ const EmployeePage = () => {
     tin: "",
     pagibig: "",
     philhealth: "",
-    deductions: "",
+    deductions: {
+      absent: "",
+      late: "",
+      sss: "",
+      tin: "",
+      pagibig: "",
+      philhealth: "",
+      other: "",
+      total: "",
+    },
     emergencyContact: { name: "", relation: "", phone: "" },
     profilePic: "",
     shift: "", // ✅ shift
@@ -101,6 +114,26 @@ const EmployeePage = () => {
 
     try {
       let employeeData = { ...form };
+
+        // auto-compute total
+      const {
+        absent,
+        late,
+        sss,
+        tin,
+        pagibig,
+        philhealth,
+        other,
+      } = employeeData.deductions;
+
+      employeeData.deductions.total =
+        (Number(absent) || 0) +
+        (Number(late) || 0) +
+        (Number(sss) || 0) +
+        (Number(tin) || 0) +
+        (Number(pagibig) || 0) +
+        (Number(philhealth) || 0) +
+        (Number(other) || 0);
 
       if (editId) {
         await axios.put(`/employees/${editId}`, employeeData);
@@ -148,7 +181,16 @@ const EmployeePage = () => {
         tin: "",
         pagibig: "",
         philhealth: "",
-        deductions: "",
+        deductions: {
+          absent: "",
+          late: "",
+          sss: "",
+          tin: "",
+          pagibig: "",
+          philhealth: "",
+          other: "",
+          total: "",
+        },
         emergencyContact: { name: "", relation: "", phone: "" },
         profilePic: "",
         shift: "",
@@ -205,7 +247,16 @@ const EmployeePage = () => {
       tin: employee.tin || "",
       pagibig: employee.pagibig || "",
       philhealth: employee.philhealth || "",
-      deductions: employee.deductions || "",
+      deductions: employee.deductions || {
+        absent: "",
+        late: "",
+        sss: "",
+        tin: "",
+        pagibig: "",
+        philhealth: "",
+        other: "",
+        total: "",
+      },
       emergencyContact: employee.emergencyContact || {
         name: "",
         relation: "",
@@ -556,11 +607,27 @@ const EmployeePage = () => {
               onChange={(e) => setForm({ ...form, philhealth: e.target.value })}
               fullWidth
             />
+            <Typography variant="h6" sx={{ mt: 2 }}>Deductions</Typography>
+            {["absent", "late", "sss", "tin", "pagibig", "philhealth", "other"].map((field) => (
+              <TextField
+                key={field}
+                label={field.charAt(0).toUpperCase() + field.slice(1)}
+                type="number"
+                value={form.deductions[field]}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    deductions: { ...form.deductions, [field]: e.target.value },
+                  })
+                }
+                fullWidth
+              />
+            ))}
             <TextField
-              label="Deductions"
+              label="Total Deductions"
               type="number"
-              value={form.deductions}
-              onChange={(e) => setForm({ ...form, deductions: e.target.value })}
+              value={form.deductions.total}
+              InputProps={{ readOnly: true }}
               fullWidth
             />
             <TextField
@@ -623,54 +690,198 @@ const EmployeePage = () => {
       </Dialog>
 
       {/* View Details Dialog */}
-      <Dialog
-        open={!!viewEmployee}
-        onClose={() => setViewEmployee(null)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Employee Details</DialogTitle>
-        <DialogContent dividers>
-          {viewEmployee && (
-            <Box display="flex" flexDirection="column" gap={1}>
-              <Box display="flex" justifyContent="center" mb={2}>
-                <img
-                  src={viewEmployee.profilePic || "https://via.placeholder.com/80"}
-                  alt="profile"
-                  style={{ width: 80, height: 80, borderRadius: "50%" }}
-                />
-              </Box>
-              <Typography><strong>Name:</strong> {viewEmployee.fullName}</Typography>
-              <Typography><strong>Hire Date:</strong> {viewEmployee.hireDate ? new Date(viewEmployee.hireDate).toLocaleDateString() : "-"}</Typography>
-              <Typography><strong>Position:</strong> {viewEmployee.position}</Typography>
-              <Typography><strong>Shift:</strong> {viewEmployee.shift || "-"}</Typography>
-              <Typography><strong>Birthdate:</strong> {viewEmployee.birthdate ? new Date(viewEmployee.birthdate).toLocaleDateString() : "-"}</Typography>
-              <Typography><strong>Age:</strong> {viewEmployee.age || "-"}</Typography>
-              <Typography><strong>Status:</strong> {viewEmployee.status || "-"}</Typography>
-              <Typography><strong>Address:</strong> {viewEmployee.address || "-"}</Typography>
-              <Typography><strong>Phone:</strong> {viewEmployee.phone || "-"}</Typography>
-              <Typography><strong>Email:</strong> {viewEmployee.email || "-"}</Typography>
-              <Typography><strong>Department:</strong> {viewEmployee.department || "-"}</Typography>
-              <Typography><strong>Salary:</strong> {viewEmployee.salary || "-"}</Typography>
-              <Typography><strong>Rate Per Hour:</strong> {viewEmployee.ratePerHour || "-"}</Typography>
-              <Typography><strong>SSS:</strong> {viewEmployee.sss || "-"}</Typography>
-              <Typography><strong>TIN:</strong> {viewEmployee.tin || "-"}</Typography>
-              <Typography><strong>Pagibig:</strong> {viewEmployee.pagibig || "-"}</Typography>
-              <Typography><strong>PhilHealth:</strong> {viewEmployee.philhealth || "-"}</Typography>
-              <Typography><strong>Deductions:</strong> {viewEmployee.deductions || "-"}</Typography>
-              <Typography>
-                <strong>Emergency Contact:</strong>{" "}
-                {viewEmployee.emergencyContact
-                  ? `${viewEmployee.emergencyContact.name} (${viewEmployee.emergencyContact.relation}) - ${viewEmployee.emergencyContact.phone}`
-                  : "-"}
+     <Dialog
+  open={!!viewEmployee}
+  onClose={() => setViewEmployee(null)}
+  fullWidth
+  maxWidth="sm"
+  PaperProps={{
+    sx: {
+      borderRadius: 3,
+      p: 1,
+    },
+  }}
+>
+  <DialogTitle sx={{ fontWeight: 600, fontSize: "1.3rem", textAlign: "center" }}>
+    Employee Details
+  </DialogTitle>
+
+  <DialogContent dividers sx={{ px: 3, py: 2 }}>
+    {viewEmployee && (
+      <Box>
+        {/* Profile Section */}
+        <Box display="flex" flexDirection="column" alignItems="center" mb={3}>
+          <Avatar
+            src={viewEmployee.profilePic || "https://via.placeholder.com/80"}
+            alt="profile"
+            sx={{ width: 100, height: 100, mb: 1 }}
+          />
+          <Typography variant="h6" fontWeight={600}>
+            {viewEmployee.fullName}
+          </Typography>
+          <Chip
+            label={viewEmployee.status || "N/A"}
+            color={viewEmployee.status === "Active" ? "success" : "default"}
+            size="small"
+            sx={{ mt: 1 }}
+          />
+        </Box>
+
+        <Divider sx={{ mb: 2 }} />
+
+        {/* Info Grid */}
+        <Grid container spacing={2}>
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              Hire Date
+            </Typography>
+            <Typography fontWeight={500}>
+              {viewEmployee.hireDate
+                ? new Date(viewEmployee.hireDate).toLocaleDateString()
+                : "-"}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              Position
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.position}</Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              Shift
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.shift || "-"}</Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              Birthdate
+            </Typography>
+            <Typography fontWeight={500}>
+              {viewEmployee.birthdate
+                ? new Date(viewEmployee.birthdate).toLocaleDateString()
+                : "-"}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              Age
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.age || "-"}</Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              Department
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.department || "-"}</Typography>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Typography variant="body2" color="text.secondary">
+              Address
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.address || "-"}</Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              Phone
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.phone || "-"}</Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              Email
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.email || "-"}</Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              Salary
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.salary || "-"}</Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              Rate Per Hour
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.ratePerHour || "-"}</Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              SSS
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.sss || "-"}</Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              TIN
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.tin || "-"}</Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              Pagibig
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.pagibig || "-"}</Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="body2" color="text.secondary">
+              PhilHealth
+            </Typography>
+            <Typography fontWeight={500}>{viewEmployee.philhealth || "-"}</Typography>
+          </Grid>
+
+          {/* Deductions */}
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" fontWeight={600} mt={2}>
+              Deductions
+            </Typography>
+            {Object.entries(viewEmployee.deductions || {}).map(([key, val]) => (
+              <Typography key={key} variant="body2">
+                {key.charAt(0).toUpperCase() + key.slice(1)}: {val || 0}
               </Typography>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setViewEmployee(null)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+            ))}
+          </Grid>
+
+          {/* Emergency Contact */}
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" fontWeight={600} mt={2}>
+              Emergency Contact
+            </Typography>
+            <Typography>
+              {viewEmployee.emergencyContact
+                ? `${viewEmployee.emergencyContact.name} (${viewEmployee.emergencyContact.relation}) - ${viewEmployee.emergencyContact.phone}`
+                : "-"}
+            </Typography>
+          </Grid>
+        </Grid>
+      </Box>
+    )}
+  </DialogContent>
+
+  <DialogActions sx={{ p: 2 }}>
+    <Button
+      onClick={() => setViewEmployee(null)}
+      variant="contained"
+      sx={{ borderRadius: 2 }}
+    >
+      Close
+    </Button>
+  </DialogActions>
+</Dialog>
 
       {/* Delete Confirm Dialog */}
       <Dialog

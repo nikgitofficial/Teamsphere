@@ -60,14 +60,21 @@ const AttendanceOverview = () => {
   useEffect(() => {
     fetchAttendances();
   }, [user, startDate, endDate]);
-
+  
   // Only filter by search, backend handles date range
-  const filteredAttendances = attendances.filter((a) => {
+const filteredAttendances = attendances
+  .slice() // make a copy
+  .sort((a, b) => new Date(b.date) - new Date(a.date)) // 🔥 latest date first
+  .filter((a) => {
     return (
       a.employee.fullName.toLowerCase().includes(search.toLowerCase()) ||
       a.employee.pincode.includes(search)
     );
   });
+
+
+
+  
 
   // ✅ Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -94,15 +101,12 @@ const calculateTotalHours = (a) => {
 
     let sessionMs = checkOut - checkIn;
 
-    // Subtract breaks that belong to this session
+    // Subtract all breaks that fall within this session
     if (a.breakOuts?.length && a.breakIns?.length) {
-      const breaksOut = Array.isArray(a.breakOuts[i]) ? a.breakOuts[i] : [a.breakOuts[i]];
-      const breaksIn = Array.isArray(a.breakIns[i]) ? a.breakIns[i] : [a.breakIns[i]];
-
-      for (let j = 0; j < breaksOut.length; j++) {
-        const bOut = new Date(breaksOut[j]);
-        const bIn = breaksIn[j] ? new Date(breaksIn[j]) : null;
-        if (bIn && bOut >= checkIn && bIn <= checkOut) {
+      for (let j = 0; j < a.breakOuts.length; j++) {
+        const bOut = new Date(a.breakOuts[j]);
+        const bIn = a.breakIns[j] ? new Date(a.breakIns[j]) : new Date();
+        if (bOut >= checkIn && bIn <= checkOut) {
           sessionMs -= (bIn - bOut);
         }
       }
@@ -122,31 +126,52 @@ const calculateTotalHours = (a) => {
 
 
 
-const calculateTotalBreaks = (a) => {
-  if (!a.breakOuts?.length || !a.breakIns?.length) return 0;
+
+const calculateTotalBreaks = (attendance) => {
+  if (!attendance.breakOuts?.length) return 0;
+
   let totalMs = 0;
 
-  for (let i = 0; i < a.checkIns.length; i++) {
-    const checkIn = new Date(a.checkIns[i]);
-    const checkOut = a.checkOuts[i] ? new Date(a.checkOuts[i]) : null;
-    if (!checkOut) continue;
+  for (let i = 0; i < attendance.breakOuts.length; i++) {
+    const bOut = new Date(attendance.breakOuts[i]);
+    const bIn = attendance.breakIns?.[i] ? new Date(attendance.breakIns[i]) : new Date();
 
-    if (a.breakOuts[i] && a.breakIns[i]) {
-      const breaksOut = Array.isArray(a.breakOuts[i]) ? a.breakOuts[i] : [a.breakOuts[i]];
-      const breaksIn = Array.isArray(a.breakIns[i]) ? a.breakIns[i] : [a.breakIns[i]];
+    // Map break to the session it belongs to
+    const sessionIndex = attendance.checkIns.findIndex((ci, idx) => {
+      const co = attendance.checkOuts?.[idx] ? new Date(attendance.checkOuts[idx]) : new Date();
+      return bOut >= new Date(ci) && bIn <= co;
+    });
 
-      for (let j = 0; j < breaksOut.length; j++) {
-        const bOut = new Date(breaksOut[j]);
-        const bIn = new Date(breaksIn[j]);
-        if (bOut >= checkIn && bIn <= checkOut) {
-          totalMs += bIn - bOut;
-        }
-      }
+    if (sessionIndex !== -1) {
+      totalMs += bIn - bOut;
     }
   }
 
-  return totalMs;
+  return totalMs; // in milliseconds
 };
+
+
+// Flag Over Break per Session
+const allowedBreakMs = 60 * 60 * 1000; // 1 hour
+
+const getBreakStatus = (attendance) => {
+  return attendance.checkIns.map((ci, idx) => {
+    const co = attendance.checkOuts?.[idx] ? new Date(attendance.checkOuts[idx]) : new Date();
+    let sessionBreakMs = 0;
+
+    for (let j = 0; j < attendance.breakOuts?.length; j++) {
+      const bOut = new Date(attendance.breakOuts[j]);
+      const bIn = attendance.breakIns?.[j] ? new Date(attendance.breakIns[j]) : new Date();
+
+      if (bOut >= new Date(ci) && bIn <= co) {
+        sessionBreakMs += bIn - bOut;
+      }
+    }
+
+    return sessionBreakMs > allowedBreakMs; // true if over break
+  });
+};
+
 
 // late integration
 
@@ -339,89 +364,83 @@ const isLate = (a, checkInTime) => {
                   <TableCell><b>Total Hours</b></TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>
-                {currentAttendances.map((a) => {
-                  const totalBreaksMs = calculateTotalBreaks(a);
-                  const exceedBreak = totalBreaksMs > 3660000; // 1h 1m
+             <TableBody>
+  {currentAttendances.map((a) => {
+    const breakStatus = getBreakStatus(a); // array of booleans per check-in session
 
-                  return (
-                    <TableRow key={a._id} hover>
-                      <TableCell>
-                        {a.date
-                          ? new Date(a.date).toLocaleDateString()
-                          : "-"}
-                      </TableCell>
-                      <TableCell>{a.employee.fullName}</TableCell>
-                      <TableCell>{a.employee.position}</TableCell>
-                      <TableCell>{a.employee.shift || "-"}</TableCell>
-                      <TableCell>{a.employee.pincode}</TableCell>
-                      <TableCell>
-                        {a.checkIns?.length
-                          ? a.checkIns.map((t, idx) => {
-                              const late = isLate(a, t);
-                              return (
-                                <div
-                                  key={idx}
-                                  style={{
-                                    color: late ? "red" : "inherit",
-                                    fontWeight: late ? "bold" : "normal",
-                                  }}
-                                >
-                                  {new Date(t).toLocaleTimeString()}
-                                  {late && " (Late)"}
-                                </div>
-                              );
-                            })
-                          : "-"}
-                      </TableCell>
+    return (
+      <TableRow key={a._id} hover>
+        <TableCell>{a.date ? new Date(a.date).toLocaleDateString() : "-"}</TableCell>
+        <TableCell>{a.employee.fullName}</TableCell>
+        <TableCell>{a.employee.position}</TableCell>
+        <TableCell>{a.employee.shift || "-"}</TableCell>
+        <TableCell>{a.employee.pincode}</TableCell>
 
-                      <TableCell
-                        sx={{
-                          color: exceedBreak ? "red" : "inherit",
-                          fontWeight: exceedBreak ? "bold" : "normal",
-                        }}
-                      >
-                        {a.breakOuts?.length
-                          ? a.breakOuts.map((t, idx) => (
-                              <div key={idx}>
-                                {new Date(t).toLocaleTimeString()}
-                                {exceedBreak && idx === a.breakOuts.length - 1 && " (Over Break)"}
-                              </div>
-                            ))
-                          : "-"}
-                      </TableCell>
+        {/* Check-ins */}
+        <TableCell>
+          {a.checkIns?.map((t, idx) => {
+            const late = isLate(a, t);
+            return (
+              <div
+                key={idx}
+                style={{
+                  color: late ? "red" : "inherit",
+                  fontWeight: late ? "bold" : "normal",
+                }}
+              >
+                {new Date(t).toLocaleTimeString()}
+                {late && " (Late)"}
+              </div>
+            );
+          }) || "-"}
+        </TableCell>
 
-                      <TableCell
-                        sx={{
-                          color: exceedBreak ? "red" : "inherit",
-                          fontWeight: exceedBreak ? "bold" : "normal",
-                        }}
-                      >
-                        {a.breakIns?.length
-                          ? a.breakIns.map((t, idx) => (
-                              <div key={idx}>
-                                {new Date(t).toLocaleTimeString()}
-                                {exceedBreak && idx === a.breakIns.length - 1 && " (Over Break)"}
-                              </div>
-                            ))
-                          : "-"}
-                      </TableCell>
+        {/* Break Outs */}
+        <TableCell>
+          {a.breakOuts?.map((t, idx) => (
+            <div
+              key={idx}
+              style={{
+                color: breakStatus[idx] ? "red" : "inherit",
+                fontWeight: breakStatus[idx] ? "bold" : "normal",
+              }}
+            >
+              {new Date(t).toLocaleTimeString()}
+              {breakStatus[idx] && " (Over Break)"}
+            </div>
+          )) || "-"}
+        </TableCell>
 
-                      <TableCell>
-                        {a.checkOuts?.length
-                          ? a.checkOuts.map((t, idx) => (
-                              <div key={idx}>
-                                {new Date(t).toLocaleTimeString()}
-                              </div>
-                            ))
-                          : "-"}
-                      </TableCell>
+        {/* Break Ins */}
+        <TableCell>
+          {a.breakIns?.map((t, idx) => (
+            <div
+              key={idx}
+              style={{
+                color: breakStatus[idx] ? "red" : "inherit",
+                fontWeight: breakStatus[idx] ? "bold" : "normal",
+              }}
+            >
+              {new Date(t).toLocaleTimeString()}
+              {breakStatus[idx] && " (Over Break)"}
+            </div>
+          )) || "-"}
+        </TableCell>
 
-                      <TableCell>{calculateTotalHours(a)}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
+        {/* Check-outs */}
+        <TableCell>
+          {a.checkOuts?.map((t, idx) => (
+            <div key={idx}>{new Date(t).toLocaleTimeString()}</div>
+          )) || "-"}
+        </TableCell>
+
+        {/* Total hours */}
+        <TableCell>{calculateTotalHours(a)}</TableCell>
+      </TableRow>
+    );
+  })}
+</TableBody>
+
             </Table>
           </TableContainer>
 

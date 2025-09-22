@@ -33,11 +33,7 @@ export const checkIn = async (req, res) => {
       date: { $gte: start, $lte: end },
     });
 
-    // 🔄 Fallback: if no record today, fetch latest regardless of date
-    if (!attendance) {
-      attendance = await Attendance.findOne({ employee: employee._id }).sort({ date: -1 });
-    }
-
+    // ✅ If no record for today, create a new one
     if (!attendance) {
       attendance = new Attendance({ employee: employee._id, date: new Date() });
     }
@@ -58,17 +54,12 @@ export const breakOut = async (req, res) => {
     const employee = await Employee.findOne({ pincode, user: req.user.id });
     if (!employee) return res.status(404).json({ msg: "Invalid pincode" });
 
-    const { start, end } = todayRange();
-    let attendance = await Attendance.findOne({
+    // Get latest attendance (not just today)
+    const attendance = await Attendance.findOne({
       employee: employee._id,
-      date: { $gte: start, $lte: end },
-    });
+    }).sort({ date: -1 });
 
-    if (!attendance) {
-      attendance = await Attendance.findOne({ employee: employee._id }).sort({ date: -1 });
-    }
-
-    if (!attendance?.checkIns.length)
+    if (!attendance || !attendance.checkIns.length)
       return res.status(400).json({ msg: "You must check in first" });
 
     attendance.breakOuts.push(new Date());
@@ -87,17 +78,12 @@ export const breakIn = async (req, res) => {
     const employee = await Employee.findOne({ pincode, user: req.user.id });
     if (!employee) return res.status(404).json({ msg: "Invalid pincode" });
 
-    const { start, end } = todayRange();
-    let attendance = await Attendance.findOne({
+    // Get latest attendance (not just today)
+    const attendance = await Attendance.findOne({
       employee: employee._id,
-      date: { $gte: start, $lte: end },
-    });
+    }).sort({ date: -1 });
 
-    if (!attendance) {
-      attendance = await Attendance.findOne({ employee: employee._id }).sort({ date: -1 });
-    }
-
-    if (!attendance?.breakOuts.length)
+    if (!attendance || !attendance.breakOuts.length)
       return res.status(400).json({ msg: "You must break out first" });
 
     attendance.breakIns.push(new Date());
@@ -116,17 +102,12 @@ export const checkOut = async (req, res) => {
     const employee = await Employee.findOne({ pincode, user: req.user.id });
     if (!employee) return res.status(404).json({ msg: "Invalid pincode" });
 
-    const { start, end } = todayRange();
-    let attendance = await Attendance.findOne({
+    // Get latest attendance (not just today)
+    const attendance = await Attendance.findOne({
       employee: employee._id,
-      date: { $gte: start, $lte: end },
-    });
+    }).sort({ date: -1 });
 
-    if (!attendance) {
-      attendance = await Attendance.findOne({ employee: employee._id }).sort({ date: -1 });
-    }
-
-    if (!attendance?.checkIns.length)
+    if (!attendance || !attendance.checkIns.length)
       return res.status(400).json({ msg: "You must check in first" });
 
     attendance.checkOuts.push(new Date());
@@ -187,7 +168,9 @@ export const getAllAttendances = async (req, res) => {
 
     const attendances = await Attendance.find({
       employee: { $in: employeeIds },
-    }).populate("employee", "fullName position pincode profilePic shift");
+    })
+      .populate("employee", "fullName position pincode profilePic shift")
+      .sort({ date: -1 }); // ✅ latest first
 
     res.json({ msg: "✅ All attendances retrieved", attendances });
   } catch (err) {

@@ -1,10 +1,9 @@
 import Employee from "../models/Employee.js";
 import { v2 as cloudinary } from "cloudinary";
 
-// Utility to generate unique 6-digit pincode
+// Generate unique PIN
 const generateUniquePincode = async () => {
-  let pin;
-  let exists = true;
+  let pin, exists = true;
   while (exists) {
     pin = Math.floor(100000 + Math.random() * 900000).toString();
     exists = await Employee.findOne({ pincode: pin });
@@ -12,54 +11,24 @@ const generateUniquePincode = async () => {
   return pin;
 };
 
-// Create employee (linked to logged-in user)
+// Create
 export const createEmployee = async (req, res) => {
   try {
-    const {
-      fullName,
-      position,
-      birthdate,
-      hireDate,
-      age,
-      status,
-      address,
-      phone,
-      email,
-      department,
-      salary,
-      ratePerHour,
-      sss,
-      tin,
-      pagibig,
-      philhealth,
-      deductions,
-      emergencyContact,
-      shift, // ✅ added
-    } = req.body;
+    const { deductions = {}, ...rest } = req.body;
 
-    const pincode = await generateUniquePincode();
+    const total =
+      (Number(deductions.absent) || 0) +
+      (Number(deductions.late) || 0) +
+      (Number(deductions.sss) || 0) +
+      (Number(deductions.tin) || 0) +
+      (Number(deductions.pagibig) || 0) +
+      (Number(deductions.philhealth) || 0) +
+      (Number(deductions.other) || 0);
 
     const employee = new Employee({
-      fullName,
-      position,
-      birthdate,
-      hireDate,
-      age,
-      status,
-      address,
-      phone,
-      email,
-      department,
-      salary,
-      ratePerHour,
-      sss,
-      tin,
-      pagibig,
-      philhealth,
-      deductions,
-      emergencyContact,
-      shift, // ✅ save shift
-      pincode,
+      ...rest,
+      deductions: { ...deductions, total },
+      pincode: await generateUniquePincode(),
       user: req.user.id,
     });
 
@@ -70,7 +39,7 @@ export const createEmployee = async (req, res) => {
   }
 };
 
-// Get employees for current user only
+// Get
 export const getEmployees = async (req, res) => {
   try {
     const employees = await Employee.find({ user: req.user.id });
@@ -80,10 +49,24 @@ export const getEmployees = async (req, res) => {
   }
 };
 
-// Update employee (only if belongs to user)
+// Update
 export const updateEmployee = async (req, res) => {
   try {
-    const updateData = { ...req.body }; // includes shift now
+    const { deductions = {}, ...rest } = req.body;
+
+    const total =
+      (Number(deductions.absent) || 0) +
+      (Number(deductions.late) || 0) +
+      (Number(deductions.sss) || 0) +
+      (Number(deductions.tin) || 0) +
+      (Number(deductions.pagibig) || 0) +
+      (Number(deductions.philhealth) || 0) +
+      (Number(deductions.other) || 0);
+
+    const updateData = {
+      ...rest,
+      deductions: { ...deductions, total },
+    };
 
     const employee = await Employee.findOneAndUpdate(
       { _id: req.params.id, user: req.user.id },
@@ -92,14 +75,13 @@ export const updateEmployee = async (req, res) => {
     );
 
     if (!employee) return res.status(404).json({ msg: "Employee not found" });
-
     res.json(employee);
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
 };
 
-// Delete employee (only if belongs to user)
+// Delete
 export const deleteEmployee = async (req, res) => {
   try {
     const employee = await Employee.findOneAndDelete({
@@ -113,22 +95,19 @@ export const deleteEmployee = async (req, res) => {
   }
 };
 
-// ✅ Upload / Update employee profile picture
+// Upload Pic
 export const uploadEmployeePic = async (req, res) => {
   try {
-    const employeeId = req.params.id;
-
     if (!req.file || !req.file.path) {
       return res.status(400).json({ msg: "No file uploaded" });
     }
 
     const employee = await Employee.findOne({
-      _id: employeeId,
+      _id: req.params.id,
       user: req.user.id,
     });
     if (!employee) return res.status(404).json({ msg: "Employee not found" });
 
-    // Delete old pic from Cloudinary if exists
     if (employee.profilePic) {
       const publicId = employee.profilePic.split("/").pop().split(".")[0];
       await cloudinary.uploader.destroy(publicId);

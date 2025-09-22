@@ -31,8 +31,28 @@ export const generatePayroll = async (req, res) => {
 
       const ratePerHour = emp.ratePerHour || 0;
       const grossPay = totalHours * ratePerHour;
-      const deductions = emp.deductions || 0;
-      const netPay = grossPay - deductions;
+
+      // ✅ Deductions breakdown integration
+      const deductions = {
+        absent: emp.deductions?.absent || 0,
+        late: emp.deductions?.late || 0,
+        sss: emp.deductions?.sss || 0,
+        philhealth: emp.deductions?.philhealth || 0,
+        pagibig: emp.deductions?.pagibig || 0,
+        tin: emp.deductions?.tin || 0,
+        other: emp.deductions?.other || 0,
+      };
+
+      deductions.total =
+        deductions.absent +
+        deductions.late +
+        deductions.sss +
+        deductions.philhealth +
+        deductions.pagibig +
+        deductions.tin +
+        deductions.other;
+
+      const netPay = grossPay - deductions.total;
 
       const payroll = await Payroll.findOneAndUpdate(
         { employee: emp._id, startDate: start, endDate: end },
@@ -44,7 +64,7 @@ export const generatePayroll = async (req, res) => {
     }
 
     const populatedPayrolls = await Payroll.find({ _id: { $in: payrolls.map(p => p._id) } })
-      .populate("employee", "fullName");
+      .populate("employee", "fullName position pincode");
 
     res.json({ msg: "✅ Payroll generated", payrolls: populatedPayrolls });
   } catch (err) {
@@ -79,8 +99,28 @@ export const generatePayslip = async (req, res) => {
 
     const ratePerHour = employee.ratePerHour || 0;
     const grossPay = totalHours * ratePerHour;
-    const deductions = employee.deductions || 0;
-    const netPay = grossPay - deductions;
+
+    // ✅ Deductions breakdown integration
+    const deductions = {
+      absent: employee.deductions?.absent || 0,
+      late: employee.deductions?.late || 0,
+      sss: employee.deductions?.sss || 0,
+      philhealth: employee.deductions?.philhealth || 0,
+      pagibig: employee.deductions?.pagibig || 0,
+      tin: employee.deductions?.tin || 0,
+      other: employee.deductions?.other || 0,
+    };
+
+    deductions.total =
+      deductions.absent +
+      deductions.late +
+      deductions.sss +
+      deductions.philhealth +
+      deductions.pagibig +
+      deductions.tin +
+      deductions.other;
+
+    const netPay = grossPay - deductions.total;
 
     const payroll = await Payroll.findOneAndUpdate(
       { employee: employee._id, startDate: start, endDate: end },

@@ -4,17 +4,14 @@ const employeeSchema = new mongoose.Schema(
   {
     fullName: { type: String, required: true },
     position: { type: String, required: true },
-    pincode: { type: String, required: true, unique: true }, // unique for attendance
-
+    pincode: { type: String, required: true, unique: true },
     profilePic: { type: String },
-
-    // ✅ New Fields
     birthdate: { type: Date },
     age: { type: Number },
-    status: { 
-      type: String, 
-      enum: ["Single", "Married", "Widowed", "Separated", "Other"], 
-      default: "Single" 
+    status: {
+      type: String,
+      enum: ["Single", "Married", "Widowed", "Separated", "Other"],
+      default: "Single",
     },
     address: { type: String },
     phone: { type: String },
@@ -27,18 +24,26 @@ const employeeSchema = new mongoose.Schema(
     tin: { type: String },
     pagibig: { type: String },
     philhealth: { type: String },
-    deductions: { type: Number, default: 0 },
 
-    // ✅ New Shift Field (ex: "7am-4pm")
+    // ✅ Updated Deductions object
+    deductions: {
+      absent: { type: Number, default: 0 },
+      late: { type: Number, default: 0 },
+      sss: { type: Number, default: 0 },
+      tin: { type: Number, default: 0 },
+      pagibig: { type: Number, default: 0 },
+      philhealth: { type: Number, default: 0 },
+      other: { type: Number, default: 0 },
+      total: { type: Number, default: 0 },
+    },
+
     shift: { type: String, default: "8am-5pm" },
-
     emergencyContact: {
       name: String,
       relation: String,
       phone: String,
     },
-
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // link to creator
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }
 );

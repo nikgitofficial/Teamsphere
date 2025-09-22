@@ -63,16 +63,22 @@ const PayrollOverview = () => {
     }
   };
 
-// ✅ Format decimal hours → HH:mm:ss
-const formatHours = (decimalHours) => {
-  const hours = Math.floor(decimalHours);
-  const minutes = Math.floor((decimalHours - hours) * 60);
-  const seconds = Math.round(((decimalHours - hours) * 60 - minutes) * 60);
-  return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds
-    .toString()
-    .padStart(2, "0")}`;
+  // ✅ pin mask 
+  const maskPIN = (pin) => {
+  if (!pin) return "--";
+  const lastTwo = pin.slice(-2);
+  return `••••${lastTwo}`;
 };
 
+  // ✅ Format decimal hours → HH:mm:ss
+  const formatHours = (decimalHours) => {
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.floor((decimalHours - hours) * 60);
+    const seconds = Math.round(((decimalHours - hours) * 60 - minutes) * 60);
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
 
   const filteredPayrolls = payrolls.filter((p) => {
     const nameMatch = p.employee.fullName.toLowerCase().includes(search.toLowerCase());
@@ -90,62 +96,79 @@ const formatHours = (decimalHours) => {
     setCurrentPage(value);
   };
 
-const exportToExcel = () => {
-  const worksheet = XLSX.utils.json_to_sheet(
-    filteredPayrolls.map((p) => ({
-      "Employee Name": p.employee.fullName,
-      PIN: p.employee.pincode || "-",
-      Period: `${startDate} to ${endDate}`,
-      "Total Hours": formatHours(p.totalHours),
-      "Total Days": p.totalDays?.toFixed(2) || "0.00",
-      "Rate Per Hour": p.ratePerHour.toFixed(2),
-      "Gross Pay": p.grossPay.toFixed(2),
-      Deductions: p.deductions.toFixed(2),
-      "Net Pay": p.netPay.toFixed(2),
-    }))
-  );
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(
+      filteredPayrolls.map((p) => ({
+        "Employee Name": p.employee.fullName,
+        PIN: `••••${p.employee?.pincode?.slice(-2) || "--"}`,
+        Period: `${startDate} to ${endDate}`,
+        "Total Hours": formatHours(p.totalHours),
+        "Total Days": p.totalDays?.toFixed(2) || "0.00",
+        "Rate Per Hour": p.ratePerHour.toFixed(2),
+        "Gross Pay": p.grossPay.toFixed(2),
+        // ✅ Export total only
+        "Deductions (Total)": p.deductions.total?.toFixed(2) || "0.00",
+        "Net Pay": p.netPay.toFixed(2),
+      }))
+    );
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Payroll");
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Payroll");
 
-  // ✅ Custom filename with Payroll + Period
-  XLSX.writeFile(workbook, `Payroll_${startDate}_to_${endDate}.xlsx`);
-};
-
+    XLSX.writeFile(workbook, `Payroll_${startDate}_to_${endDate}.xlsx`);
+  };
 
  const exportToPDF = () => {
   const doc = new jsPDF();
 
-  // ✅ Add title and payroll period
+  // Header
   doc.setFontSize(16);
-  doc.text("Payroll Records", 105, 15, { align: "center" });
+  doc.setFont("helvetica", "bold");
+  doc.text("My Company Inc.", 105, 15, { align: "center" });
 
   doc.setFontSize(12);
-  doc.text(`Period: ${startDate} to ${endDate}`, 105, 25, { align: "center" });
+  doc.text("Payroll Records", 105, 23, { align: "center" });
+  doc.text(`Period: ${startDate} to ${endDate}`, 105, 30, { align: "center" });
 
   autoTable(doc, {
-    head: [["Employee", "PIN", "Period", "Total Hours", "Total Days", "Rate/Hour", "Gross Pay", "Deductions", "Net Pay"]],
+    startY: 40,
+    head: [[
+      "Employee",
+      "PIN",
+      "Period",
+      "Total Hours",
+      "Total Days",
+      "Rate/Hour",
+      "Gross Pay",
+      "Deductions (Total)",
+      "Net Pay",
+    ]],
     body: filteredPayrolls.map((p) => [
       p.employee.fullName,
-      p.employee.pincode || "-",
+      `••••${p.employee?.pincode?.slice(-2) || "--"}`,
       `${startDate} to ${endDate}`,
       formatHours(p.totalHours),
       p.totalDays?.toFixed(2) || "0.00",
-      p.ratePerHour.toFixed(2),
-      p.grossPay.toFixed(2),
-      p.deductions.toFixed(2),
-      p.netPay.toFixed(2),
+      `₱${p.ratePerHour.toFixed(2)}`,
+      `₱${p.grossPay.toFixed(2)}`,
+      `₱${p.deductions.total?.toFixed(2) || "0.00"}`,
+      `₱${p.netPay.toFixed(2)}`,
     ]),
-    startY: 35, // ✅ Table starts after header
     styles: { fontSize: 8 },
+    theme: "striped",
+    headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+    columnStyles: { 8: { fontStyle: "bold", textColor: [34, 153, 84] } },
   });
 
-  // ✅ Custom filename with Payroll + Period
+  // Footer
+  doc.setFontSize(9);
+  doc.setTextColor(100);
+  doc.text(`Downloaded on: ${new Date().toLocaleString()}`, 20, 290);
+
   doc.save(`Payroll_${startDate}_to_${endDate}.pdf`);
 };
 
 
-  // ✅ View Payslip for single employee
   const handleViewPayslip = async (employeeId) => {
     try {
       const { data } = await axios.post(
@@ -161,35 +184,94 @@ const exportToExcel = () => {
     }
   };
 
-  // ✅ Download single payslip
-  const handleDownloadPayslip = () => {
-    if (!payslip) return;
-    const doc = new jsPDF();
-    doc.setFontSize(14);
-    doc.text("Employee Payslip", 105, 20, { align: "center" });
+const handleDownloadPayslip = () => {
+  if (!payslip) return;
+  const doc = new jsPDF();
 
-    doc.setFontSize(10);
-    doc.text(`Employee: ${payslip.employee.fullName}`, 20, 40);
-    doc.text(`Position: ${payslip.employee.position || "-"}`, 20, 48);
-    doc.text(`PIN: ${payslip.employee.pincode || "-"}`, 20, 56);
-    doc.text(
-      `Period: ${new Date(payslip.startDate).toLocaleDateString()} - ${new Date(
+  // Company Header
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text("NikTech Inc.", 105, 15, { align: "center" });
+
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.text("Employee Payslip", 105, 25, { align: "center" });
+
+  // Employee Info Table
+  autoTable(doc, {
+    startY: 35,
+    styles: { fontSize: 10 },
+    head: [["Employee", "Position", "PIN", "Period"]],
+    body: [[
+      payslip.employee.fullName,
+      payslip.employee.position || "-",
+      `••••${payslip.employee?.pincode?.slice(-2) || "--"}`,
+      `${new Date(payslip.startDate).toLocaleDateString()} - ${new Date(
         payslip.endDate
-      ).toLocaleDateString()}`,
-      20,
-      64
-    );
+      ).toLocaleDateString()}`
+    ]],
+    theme: "grid",
+    headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+  });
 
-    // ✅ FIXED: include Total Days
-    doc.text(`Total Days: ${payslip.totalDays?.toFixed(2) || "0.00"}`, 20, 72);
-    doc.text(`Total Hours: ${formatHours(payslip.totalHours)}`, 20, 80);
-    doc.text(`Rate/Hour: ₱${payslip.ratePerHour.toFixed(2)}`, 20, 88);
-    doc.text(`Gross Pay: ₱${payslip.grossPay.toFixed(2)}`, 20, 96);
-    doc.text(`Deductions: ₱${payslip.deductions.toFixed(2)}`, 20, 104);
-    doc.text(`Net Pay: ₱${payslip.netPay.toFixed(2)}`, 20, 112);
+  // Salary Summary Table
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 10,
+    styles: { fontSize: 10 },
+    head: [["Total Days", "Total Hours", "Rate/Hour", "Gross Pay"]],
+    body: [[
+      payslip.totalDays?.toFixed(2) || "0.00",
+      formatHours(payslip.totalHours),
+      `₱${payslip.ratePerHour.toFixed(2)}`,
+      `₱${payslip.grossPay.toFixed(2)}`
+    ]],
+    theme: "striped",
+    headStyles: { fillColor: [52, 152, 219], textColor: 255 },
+  });
 
-    doc.save(`${payslip.employee.fullName}_Payslip.pdf`);
-  };
+  // Deductions Breakdown
+  const d = payslip.deductions || {};
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 10,
+    styles: { fontSize: 10 },
+    head: [["Deduction Type", "Amount"]],
+    body: [
+      ["Absent", `₱${d.absent?.toFixed(2) || "0.00"}`],
+      ["Late", `₱${d.late?.toFixed(2) || "0.00"}`],
+      ["SSS", `₱${d.sss?.toFixed(2) || "0.00"}`],
+      ["PhilHealth", `₱${d.philhealth?.toFixed(2) || "0.00"}`],
+      ["Pag-IBIG", `₱${d.pagibig?.toFixed(2) || "0.00"}`],
+      ["TIN", `₱${d.tin?.toFixed(2) || "0.00"}`],
+      ["Other", `₱${d.other?.toFixed(2) || "0.00"}`],
+      [{ content: "TOTAL", styles: { fontStyle: "bold" } }, `₱${d.total?.toFixed(2) || "0.00"}`],
+    ],
+    theme: "grid",
+    headStyles: { fillColor: [231, 76, 60], textColor: 255 },
+    columnStyles: { 1: { halign: "right" } },
+  });
+
+  // Net Pay Highlight
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(34, 153, 84);
+  doc.text(
+    `Net Pay: ₱${payslip.netPay.toFixed(2)}`,
+    20,
+    doc.lastAutoTable.finalY + 15
+  );
+
+  // Footer
+  doc.setFontSize(9);
+  doc.setTextColor(100);
+  const downloadDate = new Date().toLocaleString();
+  doc.text(`Downloaded on: ${downloadDate}`, 20, 290);
+  doc.text("This payslip is confidential and intended for the employee only.", 20, 295);
+
+  // Save PDF
+  doc.save(`${payslip.employee.fullName}_Payslip.pdf`);
+};
+
+
 
   return (
     <Box p={4} display="flex" flexDirection="column" alignItems="center">
@@ -255,10 +337,10 @@ const exportToExcel = () => {
                     "PIN",
                     "Period",
                     "Total Hours",
-                    "Total Days", // ✅ Added
+                    "Total Days",
                     "Rate/Hour",
                     "Gross Pay",
-                    "Deductions",
+                    "Deductions (Total)",
                     "Net Pay",
                     "Action",
                   ].map((header) => (
@@ -272,13 +354,14 @@ const exportToExcel = () => {
                 {currentPayrolls.map((p) => (
                   <TableRow key={p._id}>
                     <TableCell>{p.employee.fullName}</TableCell>
-                    <TableCell>{p.employee.pincode || "-"}</TableCell>
+                    <TableCell>{maskPIN(p.employee.pincode)}</TableCell>
                     <TableCell>{`${startDate} to ${endDate}`}</TableCell>
                     <TableCell>{formatHours(p.totalHours)}</TableCell>
                     <TableCell>{p.totalDays?.toFixed(2) || "0.00"}</TableCell>
                     <TableCell>{p.ratePerHour.toFixed(2)}</TableCell>
                     <TableCell>{p.grossPay.toFixed(2)}</TableCell>
-                    <TableCell>{p.deductions.toFixed(2)}</TableCell>
+                    {/* ✅ Show only total in table */}
+                    <TableCell>{p.deductions.total?.toFixed(2) || "0.00"}</TableCell>
                     <TableCell>{p.netPay.toFixed(2)}</TableCell>
                     <TableCell>
                       <Button
@@ -295,7 +378,6 @@ const exportToExcel = () => {
             </Table>
           </TableContainer>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <Box mt={2}>
               <Pagination
@@ -309,63 +391,148 @@ const exportToExcel = () => {
         </>
       )}
 
-      {/* Payslip Preview Modal */}
-      <Dialog
-        open={openPreview}
-        onClose={() => setOpenPreview(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Payslip Preview</DialogTitle>
-        <DialogContent dividers>
-          {payslip ? (
-            <Box>
-              <Typography variant="subtitle1">
-                <strong>Employee:</strong> {payslip.employee.fullName}
-              </Typography>
-              <Typography variant="subtitle1">
-                <strong>Position:</strong> {payslip.employee.position || "-"}
-              </Typography>
-              <Typography variant="subtitle1">
-                <strong>PIN:</strong> {payslip.employee.pincode || "-"}
-              </Typography>
-              <Typography variant="subtitle1">
-                <strong>Period:</strong>{" "}
-                {new Date(payslip.startDate).toLocaleDateString()} -{" "}
-                {new Date(payslip.endDate).toLocaleDateString()}
-              </Typography>
-              <Box mt={2}>
-                <Typography>
-                  <strong>Total Days:</strong> {payslip.totalDays?.toFixed(2) || "0.00"}
-                </Typography>
-                <Typography>
-                  <strong>Total Hours:</strong> {formatHours(payslip.totalHours)}
-                </Typography>
-                <Typography>
-                  <strong>Rate/Hour:</strong> ₱{payslip.ratePerHour.toFixed(2)}
-                </Typography>
-                <Typography>
-                  <strong>Gross Pay:</strong> ₱{payslip.grossPay.toFixed(2)}
-                </Typography>
-                <Typography>
-                  <strong>Deductions:</strong> ₱{payslip.deductions.toFixed(2)}
-                </Typography>
-                <Typography>
-                  <strong>Net Pay:</strong> ₱{payslip.netPay.toFixed(2)}
-                </Typography>
-              </Box>
-            </Box>
-          ) : (
-            <Typography>No payslip data</Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenPreview(false)}>Close</Button>
-          <Button variant="contained" onClick={handleDownloadPayslip}>
-            Download PDF
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* ✅ Payslip Preview Modal - Modern Responsive Design */}
+<Dialog
+  open={openPreview}
+  onClose={() => setOpenPreview(false)}
+  maxWidth="sm"
+  fullWidth
+  PaperProps={{
+    sx: {
+      borderRadius: 3,
+      boxShadow: 6,
+    },
+  }}
+>
+  <DialogTitle
+    sx={{
+      fontWeight: 600,
+      fontSize: "1.25rem",
+      color: "primary.main",
+      borderBottom: "1px solid",
+      borderColor: "divider",
+    }}
+  >
+    Payslip Preview
+  </DialogTitle>
+
+  <DialogContent dividers sx={{ p: { xs: 2, sm: 3 } }}>
+    {payslip ? (
+      <Box display="flex" flexDirection="column" gap={2}>
+        {/* Employee Info */}
+        <Box
+          display="grid"
+          gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr" }}
+          gap={2}
+          sx={{ bgcolor: "background.default", p: 2, borderRadius: 2 }}
+        >
+          <Typography variant="body1">
+            <strong>Employee:</strong> {payslip.employee.fullName}
+          </Typography>
+          <Typography variant="body1">
+            <strong>Position:</strong> {payslip.employee.position || "-"}
+          </Typography>
+              <Typography variant="body1" color="text.secondary">
+  <strong>PIN:</strong>{" "}
+  ••••{payslip.employee?.pincode?.slice(-2) || "--"}
+</Typography>
+
+          <Typography variant="body1">
+            <strong>Period:</strong>{" "}
+            {new Date(payslip.startDate).toLocaleDateString()} -{" "}
+            {new Date(payslip.endDate).toLocaleDateString()}
+          </Typography>
+        </Box>
+
+        {/* Salary & Summary */}
+        <Box
+          display="flex"
+          flexDirection="column"
+          gap={1}
+          sx={{ bgcolor: "grey.50", p: 2, borderRadius: 2 }}
+        >
+          <Typography>
+            <strong>Total Days:</strong> {payslip.totalDays?.toFixed(2) || "0.00"}
+          </Typography>
+          <Typography>
+            <strong>Total Hours:</strong> {formatHours(payslip.totalHours)}
+          </Typography>
+          <Typography>
+            <strong>Rate/Hour:</strong> ₱{payslip.ratePerHour.toFixed(2)}
+          </Typography>
+          <Typography fontWeight={600} color="success.main">
+            <strong>Gross Pay:</strong> ₱{payslip.grossPay.toFixed(2)}
+          </Typography>
+        </Box>
+
+        {/* Deductions */}
+        <Box
+          sx={{
+            bgcolor: "background.paper",
+            p: 2,
+            borderRadius: 2,
+            border: "1px dashed",
+            borderColor: "error.light",
+          }}
+        >
+          <Typography fontWeight="bold" mb={1} color="error.main">
+            Deductions:
+          </Typography>
+          <Typography>- Absent: ₱{payslip.deductions?.absent?.toFixed(2) || "0.00"}</Typography>
+          <Typography>- Late: ₱{payslip.deductions?.late?.toFixed(2) || "0.00"}</Typography>
+          <Typography>- SSS: ₱{payslip.deductions?.sss?.toFixed(2) || "0.00"}</Typography>
+          <Typography>- PhilHealth: ₱{payslip.deductions?.philhealth?.toFixed(2) || "0.00"}</Typography>
+          <Typography>- Pag-IBIG: ₱{payslip.deductions?.pagibig?.toFixed(2) || "0.00"}</Typography>
+          <Typography>- TIN: ₱{payslip.deductions?.tin?.toFixed(2) || "0.00"}</Typography>
+          <Typography>- Other: ₱{payslip.deductions?.other?.toFixed(2) || "0.00"}</Typography>
+          <Typography fontWeight="bold" mt={1} color="error.dark">
+            TOTAL: ₱{payslip.deductions?.total?.toFixed(2) || "0.00"}
+          </Typography>
+        </Box>
+
+        {/* Net Pay */}
+        <Box
+          textAlign="center"
+          sx={{
+            bgcolor: "success.light",
+            color: "success.contrastText",
+            p: 2,
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold">
+            Net Pay: ₱{payslip.netPay.toFixed(2)}
+          </Typography>
+        </Box>
+      </Box>
+    ) : (
+      <Typography>No payslip data</Typography>
+    )}
+  </DialogContent>
+
+  <DialogActions sx={{ px: 3, py: 2 }}>
+    <Button
+      onClick={() => setOpenPreview(false)}
+      variant="outlined"
+      sx={{ borderRadius: 2, px: 3 }}
+    >
+      Close
+    </Button>
+    <Button
+      variant="contained"
+      onClick={handleDownloadPayslip}
+      sx={{
+        borderRadius: 2,
+        px: 3,
+        bgcolor: "primary.main",
+        "&:hover": { bgcolor: "primary.dark" },
+      }}
+    >
+      Download PDF
+    </Button>
+  </DialogActions>
+</Dialog>
+
     </Box>
   );
 };

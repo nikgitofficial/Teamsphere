@@ -8,11 +8,17 @@ const employeeSchema = new mongoose.Schema(
     profilePic: { type: String },
     birthdate: { type: Date },
     age: { type: Number },
+    gender: { type: String, enum: ["Male", "Female", "Other"] },
     status: {
       type: String,
       enum: ["Single", "Married", "Widowed", "Separated", "Other"],
       default: "Single",
     },
+    workStatus: {
+  type: String,
+  enum: ["Active", "Inactive", "On Leave", "Terminated", "Probationary"],
+  default: "Active",
+},
     address: { type: String },
     phone: { type: String },
     email: { type: String },

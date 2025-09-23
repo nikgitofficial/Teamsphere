@@ -5,6 +5,7 @@ import {
   updateEmployee,
   deleteEmployee,
   uploadEmployeePic,
+  getEmployeeCount,
 } from "../controllers/employeeController.js";
 import authenticate from "../middleware/authMiddleware.js";
 import upload from "../middleware/cloudinaryEmployeePic.js";
@@ -24,5 +25,8 @@ router.post(
   upload.single("profilePic"),
   uploadEmployeePic
 );
+
+//home dashboard count employee
+router.get("/count", authenticate, getEmployeeCount);
 
 export default router;

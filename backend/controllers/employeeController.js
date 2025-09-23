@@ -121,3 +121,13 @@ export const uploadEmployeePic = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
+
+// Get total employee count
+export const getEmployeeCount = async (req, res) => {
+  try {
+    const count = await Employee.countDocuments({ user: req.user.id });
+    res.json({ total: count });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};

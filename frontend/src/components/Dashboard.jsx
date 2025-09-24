@@ -36,6 +36,7 @@ import {
   MonetizationOn,
   People,
   AccessTime,
+  Comment,
 } from "@mui/icons-material";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -218,6 +219,21 @@ const Dashboard = () => {
   </ListItemIcon>
   <ListItemText primary="Employees" sx={{ color: "white" }} />
 </ListItemButton>
+
+<ListItemButton
+  component={Link}
+  to="/dashboard/attendance-remarks"
+  selected={location.pathname === "/dashboard/attendance-remarks"}
+>
+  <ListItemIcon>
+    <Comment sx={{ color: "#f4b400" }} /> {/* Yellow-gold for notes */}
+  </ListItemIcon>
+  <ListItemText 
+    primary="Attendance Remarks" 
+    sx={{ color: "white", fontWeight: "bold" }} 
+  />
+</ListItemButton>
+
 
           <ListItemButton
   component={Link}

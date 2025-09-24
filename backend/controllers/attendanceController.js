@@ -35,10 +35,11 @@ export const checkIn = async (req, res) => {
 
     // ✅ If no record for today, create a new one
     if (!attendance) {
-      attendance = new Attendance({ employee: employee._id, date: new Date() });
+      attendance = new Attendance({ employee: employee._id, date: new Date(), status: "Present" });
     }
 
     attendance.checkIns.push(new Date());
+    attendance.status = "Present"; // update status
     await attendance.save();
 
     await sendResponse(res, "✅ Successfully Checked In", attendance._id);
@@ -111,6 +112,7 @@ export const checkOut = async (req, res) => {
       return res.status(400).json({ msg: "You must check in first" });
 
     attendance.checkOuts.push(new Date());
+    attendance.status = "Present";
     await attendance.save();
 
     await sendResponse(res, "✅ Checked Out successfully", attendance._id);
@@ -119,6 +121,60 @@ export const checkOut = async (req, res) => {
   }
 };
 
+// 🔹 helper: parse shift time
+const parseShiftTime = (shiftStr, baseDate) => {
+  if (!shiftStr) return null;
+  const [startStr] = shiftStr.split("-").map((s) => s.trim().toLowerCase());
+  const match = startStr.match(/(\d+)(?::(\d+))?(am|pm)/i);
+  if (!match) return null;
+
+  let hour = parseInt(match[1], 10);
+  let minute = parseInt(match[2] || "0", 10);
+  const meridian = match[3].toLowerCase();
+
+  if (meridian === "pm" && hour !== 12) hour += 12;
+  if (meridian === "am" && hour === 12) hour = 0;
+
+  const d = new Date(baseDate);
+  d.setHours(hour, minute, 0, 0);
+  return d;
+};
+
+// 🔹 auto-mark absents
+const autoMarkAbsents = async (userId) => {
+  const { start, end } = todayRange();
+  const employees = await Employee.find({ user: userId });
+
+  for (const emp of employees) {
+    let attendance = await Attendance.findOne({
+      employee: emp._id,
+      date: { $gte: start, $lte: end },
+    });
+
+    if (!attendance) {
+      attendance = new Attendance({
+        employee: emp._id,
+        date: new Date(),
+        status: "Absent",
+      });
+      await attendance.save();
+    } else {
+      if (!attendance.checkIns.length && emp.shift) {
+        const shiftStart = parseShiftTime(emp.shift, new Date());
+        if (shiftStart) {
+          const cutoff = new Date(shiftStart.getTime() + 90 * 60000);
+          if (new Date() > cutoff) {
+            attendance.status = "Absent";
+            await attendance.save();
+          }
+        }
+      } else if (attendance.checkIns.length) {
+        attendance.status = "Present";
+        await attendance.save();
+      }
+    }
+  }
+};
 
 // ✅ Get today's attendance by pincode
 export const getTodayAttendance = async (req, res) => {
@@ -142,9 +198,11 @@ export const getTodayAttendance = async (req, res) => {
   }
 };
 
-// ✅ Get all today's attendances
+// ✅ Get all today's attendances (with auto absent update)
 export const getAllTodayAttendances = async (req, res) => {
   try {
+    await autoMarkAbsents(req.user.id);
+
     const { start, end } = todayRange();
     const userEmployees = await Employee.find({ user: req.user.id });
     const employeeIds = userEmployees.map((e) => e._id);
@@ -170,7 +228,7 @@ export const getAllAttendances = async (req, res) => {
       employee: { $in: employeeIds },
     })
       .populate("employee", "fullName position pincode profilePic shift")
-      .sort({ date: -1 }); // ✅ latest first
+      .sort({ date: -1 });
 
     res.json({ msg: "✅ All attendances retrieved", attendances });
   } catch (err) {

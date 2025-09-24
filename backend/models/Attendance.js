@@ -1,4 +1,3 @@
-// models/Attendance.js
 import mongoose from "mongoose";
 
 const attendanceSchema = new mongoose.Schema({
@@ -8,7 +7,7 @@ const attendanceSchema = new mongoose.Schema({
   breakOuts: [{ type: Date }],
   breakIns: [{ type: Date }],
   checkOuts: [{ type: Date }],
-  status: { type: String, enum: ["present", "absent"], default: "present" },
+  status: { type: String, enum: ["Present", "Absent"], default: "Absent" } 
 });
 
 export default mongoose.model("Attendance", attendanceSchema);

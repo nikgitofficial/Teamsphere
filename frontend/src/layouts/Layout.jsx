@@ -18,6 +18,7 @@ const Layout = () => {
     "/dashboard",
     "/dashboard/settings",
     "/dashboard/payroll",
+    "/dashboard/attendance-remarks",
    
   ];
 
@@ -30,6 +31,7 @@ const Layout = () => {
     "/dashboard",
     "/dashboard/settings",
     "/dashboard/payroll",
+    "/dashboard/attendance-remarks",
     
     
   ];

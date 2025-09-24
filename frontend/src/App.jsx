@@ -16,6 +16,8 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import Profile from "./pages/userpage/Profile.jsx";
 import Settings  from "./pages/userpage/Settings.jsx";
 import PayrollOverview from "./pages/userpage/PayrollOverview";
+import AttendanceRemarks from "./pages/userpage/AttendanceRemarks.jsx";
+
 
 //public page
 import About from "./pages/public/About.jsx";
@@ -58,6 +60,7 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />}>
                 <Route path="home" element={<Home />} />
                 <Route path="employees" element={<EmployeePage />} />
+                <Route path="attendance-remarks" element={<AttendanceRemarks />} />
                 <Route path="attendance-overview" element={<AttendanceOverview />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="settings" element={<Settings />} />

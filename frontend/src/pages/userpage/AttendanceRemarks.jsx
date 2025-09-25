@@ -23,9 +23,15 @@ import {
   Tooltip,
   CircularProgress,
   Snackbar,
+  Pagination,
 } from "@mui/material";
 import { Comment, Edit, Delete, AttachFile } from "@mui/icons-material";
 import axios from "../../api/axios";
+
+// ✅ Export libraries
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const AttendanceRemarks = () => {
   const [remarks, setRemarks] = useState([]);
@@ -46,6 +52,7 @@ const AttendanceRemarks = () => {
   const [form, setForm] = useState({
     employee: "",
     type: "",
+    departments:"",
     reason: "",
     remarks: "",
     status: "Pending",
@@ -56,6 +63,11 @@ const AttendanceRemarks = () => {
 
   // Snackbar state
   const [snackbar, setSnackbar] = useState({ open: false, msg: "" });
+
+  // Search & Pagination
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down("sm"));
@@ -94,6 +106,7 @@ const AttendanceRemarks = () => {
       const formData = new FormData();
       formData.append("employee", form.employee);
       formData.append("type", form.type);
+      formData.append("departments", form.departments);
       formData.append("reason", form.reason);
       formData.append("remarks", form.remarks);
       formData.append("status", form.status);
@@ -147,6 +160,7 @@ const AttendanceRemarks = () => {
       setForm({
         employee: remark.employee?._id || "",
         type: remark.type,
+        departments: remark.departments,
         reason: remark.reason,
         remarks: remark.remarks,
         status: remark.status,
@@ -157,6 +171,7 @@ const AttendanceRemarks = () => {
       setForm({
         employee: "",
         type: "",
+        departments:"",
         reason: "",
         remarks: "",
         status: "Pending",
@@ -172,10 +187,70 @@ const AttendanceRemarks = () => {
     setFile(null);
   };
 
+  // ✅ Filtered remarks for search
+  const filteredRemarks = remarks.filter(
+    (r) =>
+      r.employee?.fullName.toLowerCase().includes(search.toLowerCase()) ||
+      r.type.toLowerCase().includes(search.toLowerCase()) ||
+      r.reason.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // ✅ Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentRemarks = filteredRemarks.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredRemarks.length / itemsPerPage);
+  const handlePageChange = (event, value) => setCurrentPage(value);
+
+  // ✅ Export to Excel
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(
+      filteredRemarks.map((r) => ({
+        Date: new Date(r.date).toLocaleDateString(),
+        Employee: r.employee?.fullName,
+        Type: r.type,
+        Departments: r.departments,
+        Reason: r.reason,
+        Remarks: r.remarks,
+        Status: r.status,
+      }))
+    );
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "AttendanceRemarks");
+    XLSX.writeFile(workbook, "attendance_remarks.xlsx");
+  };
+
+  // ✅ Export to PDF
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Attendance Remarks", 14, 15);
+    autoTable(doc, {
+      head: [["Date", "Employee", "Type","Department", "Reason", "Remarks", "Status"]],
+      body: filteredRemarks.map((r) => [
+        new Date(r.date).toLocaleDateString(),
+        r.employee?.fullName || "-",
+        r.type,
+        r.departments,
+        r.reason,
+        r.remarks,
+        r.status,
+      ]),
+      startY: 20,
+      styles: { fontSize: 8 },
+    });
+    doc.save("attendance_remarks.pdf");
+  };
+
   return (
     <Box p={{ xs: 2, sm: 4 }} display="flex" flexDirection="column" alignItems="center">
       {/* Header */}
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="center" alignItems="center" mb={3}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        justifyContent="center"
+        alignItems="center"
+        mb={3}
+      >
         <Comment fontSize="large" sx={{ mr: 1 }} />
         <Typography variant={isSm ? "h5" : "h4"} fontWeight="bold">
           Attendance Remarks
@@ -183,16 +258,42 @@ const AttendanceRemarks = () => {
         <Button variant="contained" onClick={() => handleOpen()}>
           Add Remark
         </Button>
+        <Button variant="contained" color="success" onClick={exportToExcel}>
+          Export Excel
+        </Button>
+        <Button variant="contained" color="error" onClick={exportToPDF}>
+          Export PDF
+        </Button>
       </Stack>
 
+      {/* Search */}
+      <TextField
+        label="Search by Employee, Type, Reason"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        sx={{ mb: 2, width: { xs: "100%", sm: 400 } }}
+      />
+
       {/* Table */}
-      <TableContainer component={Paper} sx={{ borderRadius: 2, maxWidth: 1000, width: "100%" }}>
+      <TableContainer component={Paper} sx={{ borderRadius: 2, maxWidth: 1100, width: "100%" }}>
         <Table>
-          <TableHead sx={{ backgroundColor: theme.palette.grey[100] }}>
+          <TableHead
+  sx={{
+    backgroundColor:
+      theme.palette.mode === "dark"
+        ? theme.palette.grey[900]   // dark background for dark mode
+        : theme.palette.grey[200],  // light background for light mode
+    "& .MuiTableCell-root": {
+      color: theme.palette.mode === "dark" ? theme.palette.common.white : theme.palette.text.primary,
+      fontWeight: "bold"
+    }
+  }}
+>
             <TableRow>
               <TableCell><b>Date</b></TableCell>
               <TableCell><b>Employee</b></TableCell>
               <TableCell><b>Type</b></TableCell>
+              <TableCell><b>Departments</b></TableCell>
               <TableCell><b>Reason</b></TableCell>
               <TableCell><b>Remarks</b></TableCell>
               <TableCell><b>Attachment</b></TableCell>
@@ -201,28 +302,40 @@ const AttendanceRemarks = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {remarks.length > 0 ? (
-              remarks.map((r) => (
+            {currentRemarks.length > 0 ? (
+              currentRemarks.map((r) => (
                 <TableRow key={r._id} hover>
                   <TableCell>{new Date(r.date).toLocaleDateString()}</TableCell>
                   <TableCell>{r.employee?.fullName || "-"}</TableCell>
                   <TableCell>{r.type}</TableCell>
+                  <TableCell>{r.departments}</TableCell>
                   <TableCell>{r.reason}</TableCell>
                   <TableCell>{r.remarks}</TableCell>
                   <TableCell>
-                    {r.file?.url ? (
-                      <Button
-                        size="small"
-                        startIcon={<AttachFile />}
-                        onClick={() => window.open(r.file.url, "_blank")}
-                      >
-                        {r.file.originalname}
-                      </Button>
-                    ) : "-"}
-                  </TableCell>
+  {r.file?.url ? (
+    <Tooltip title="View File">
+      <Button
+        size="small"
+        startIcon={<AttachFile />}
+        onClick={() => window.open(r.file.url, "_blank")}
+      >
+        {r.file.originalname}
+      </Button>
+    </Tooltip>
+  ) : (
+    "-"
+  )}
+</TableCell>
+
                   <TableCell>
                     <Typography
-                      color={r.status === "Rejected" ? "error" : r.status === "Approved" ? "success.main" : "textSecondary"}
+                      color={
+                        r.status === "Rejected"
+                          ? "error"
+                          : r.status === "Approved"
+                          ? "success.main"
+                          : "textSecondary"
+                      }
                       fontWeight="bold"
                     >
                       {r.status}
@@ -259,6 +372,20 @@ const AttendanceRemarks = () => {
         </Table>
       </TableContainer>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Box mt={2}>
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            siblingCount={1}
+            boundaryCount={1}
+          />
+        </Box>
+      )}
+
       {/* Add/Edit Dialog */}
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
         <DialogTitle>{selected ? "Edit Remark" : "Add Remark"}</DialogTitle>
@@ -285,10 +412,19 @@ const AttendanceRemarks = () => {
             value={form.type}
             onChange={(e) => setForm({ ...form, type: e.target.value })}
           >
-            {["Absent", "Late", "Undertime", "Overbreak", "Other"].map((t) => (
+            
+            {["Absent", "Late", "Undertime", "Overbreak", "Other","OnLeave"].map((t) => (
               <MenuItem key={t} value={t}>{t}</MenuItem>
             ))}
           </TextField>
+            <TextField
+            fullWidth
+            margin="normal"
+            label="Departments"
+            value={form.departments}
+            onChange={(e) => setForm({ ...form, departments: e.target.value })}
+          />
+        
           <TextField
             fullWidth
             margin="normal"

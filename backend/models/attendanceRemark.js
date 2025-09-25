@@ -5,9 +5,10 @@ const attendanceRemarkSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   type: {
     type: String,
-    enum: ["Absent", "Late", "Undertime", "Overbreak", "Other"],
+    enum: ["Absent", "Late", "Undertime", "Overbreak", "Other", "OnLeave"],
     required: true,
   },
+  departments: { type: String, required: true },
   reason: { type: String, required: true },
   remarks: { type: String },
   status: {

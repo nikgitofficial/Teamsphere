@@ -29,10 +29,11 @@ const Attendance = () => {
   const [selectedAction, setSelectedAction] = useState("");
   const [clock, setClock] = useState(new Date());
   const [message, setMessage] = useState("");
+  const [actionMessage, setActionMessage] = useState(""); // ✅ new
   const [attendances, setAttendances] = useState([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  
+
   const rowsPerPage = 20;
 
   const { user } = useContext(AuthContext);
@@ -73,6 +74,21 @@ const Attendance = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Auto-dismiss messages after 5 seconds
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(""), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  useEffect(() => {
+    if (actionMessage) {
+      const timer = setTimeout(() => setActionMessage(""), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [actionMessage]);
+
   // Fetch all attendances
   const fetchAllAttendances = async () => {
     try {
@@ -102,6 +118,7 @@ const Attendance = () => {
         }
       );
       setMessage(res.data.msg);
+      setActionMessage(`✅ ${action.toUpperCase()} recorded successfully`); // ✅ new
 
       // Store / remove lock
       localStorage.setItem("pincode", pincode);
@@ -116,6 +133,7 @@ const Attendance = () => {
       localStorage.removeItem("pincode");
     } catch (err) {
       setMessage(err.response?.data?.msg || "Error recording attendance");
+      setActionMessage(""); // clear on error
     }
   };
 
@@ -228,10 +246,24 @@ const Attendance = () => {
         </Button>
       </Stack>
 
-      {/* Message Alert */}
+      {/* Message Alerts */}
       {message && (
         <Alert
           severity="info"
+          sx={{
+            mb: 2,
+            width: "100%",
+            maxWidth: 600,
+            borderRadius: 2,
+          }}
+        >
+          {message}
+        </Alert>
+      )}
+
+      {actionMessage && (
+        <Alert
+          severity="success"
           sx={{
             mb: 3,
             width: "100%",
@@ -239,7 +271,7 @@ const Attendance = () => {
             borderRadius: 2,
           }}
         >
-          {message}
+          {actionMessage}
         </Alert>
       )}
 
@@ -319,10 +351,9 @@ const Attendance = () => {
                         <Typography fontWeight="500">
                           {a.employee?.fullName}
                         </Typography>
-                       <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" color="text.secondary">
                           PIN: ••••{a.employee?.pincode?.slice(-2) || "--"}
-                         </Typography>
-
+                        </Typography>
                       </Box>
                     </Stack>
                   </TableCell>

@@ -24,6 +24,12 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Assignment } from "@mui/icons-material";
 
+// 🟢 FullCalendar imports
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+
 const AttendanceOverview = () => {
   const { user } = useContext(AuthContext);
   const [attendances, setAttendances] = useState([]);
@@ -35,6 +41,9 @@ const AttendanceOverview = () => {
   // ✅ Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  // ✅ Selected calendar date filter
+  const [selectedDate, setSelectedDate] = useState(null);
 
   const theme = useTheme();
   const isSm = useMediaQuery(theme.breakpoints.down("sm"));
@@ -48,7 +57,6 @@ const AttendanceOverview = () => {
         url = `/attendance/range?start=${startDate}&end=${endDate}`;
       }
       const { data } = await axios.get(url);
-      // ✅ if backend sends `attendances`, else just `data`
       setAttendances(data.attendances || data);
     } catch (err) {
       console.error(err);
@@ -61,16 +69,27 @@ const AttendanceOverview = () => {
   useEffect(() => {
     fetchAttendances();
   }, [user, startDate, endDate]);
-  
-  // Only filter by search, backend handles date range
+
+  // ✅ Handle calendar date click
+  const handleDateClick = (info) => {
+    setSelectedDate(new Date(info.dateStr).toDateString());
+    setCurrentPage(1); // reset pagination
+  };
+
+  // Filter + sort
   const filteredAttendances = attendances
-    .slice() // make a copy
-    .sort((a, b) => new Date(b.date) - new Date(a.date)) // 🔥 latest date first
+    .slice()
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
     .filter((a) => {
-      return (
+      const matchSearch =
         a.employee.fullName.toLowerCase().includes(search.toLowerCase()) ||
-        a.employee.pincode.includes(search)
-      );
+        a.employee.pincode.includes(search);
+
+      const matchDate = selectedDate
+        ? new Date(a.date).toDateString() === selectedDate
+        : true;
+
+      return matchSearch && matchDate;
     });
 
   // ✅ Pagination logic
@@ -88,100 +107,57 @@ const AttendanceOverview = () => {
 
   const calculateTotalHours = (a) => {
     if (!a.checkIns?.length || !a.checkOuts?.length) return "-";
-
     let totalMs = 0;
-
     for (let i = 0; i < a.checkIns.length; i++) {
       const checkIn = new Date(a.checkIns[i]);
       const checkOut = a.checkOuts[i] ? new Date(a.checkOuts[i]) : null;
       if (!checkOut) continue;
-
       let sessionMs = checkOut - checkIn;
-
-      // Subtract all breaks that fall within this session
       if (a.breakOuts?.length && a.breakIns?.length) {
         for (let j = 0; j < a.breakOuts.length; j++) {
           const bOut = new Date(a.breakOuts[j]);
           const bIn = a.breakIns[j] ? new Date(a.breakIns[j]) : new Date();
           if (bOut >= checkIn && bIn <= checkOut) {
-            sessionMs -= (bIn - bOut);
+            sessionMs -= bIn - bOut;
           }
         }
       }
-
       totalMs += sessionMs;
     }
-
     const totalSeconds = Math.floor(totalMs / 1000);
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
-
     return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds
       .toString()
       .padStart(2, "0")}`;
   };
 
-  const calculateTotalBreaks = (attendance) => {
-    if (!attendance.breakOuts?.length) return 0;
-
-    let totalMs = 0;
-
-    for (let i = 0; i < attendance.breakOuts.length; i++) {
-      const bOut = new Date(attendance.breakOuts[i]);
-      const bIn = attendance.breakIns?.[i]
-        ? new Date(attendance.breakIns[i])
-        : new Date();
-
-      // Map break to the session it belongs to
-      const sessionIndex = attendance.checkIns.findIndex((ci, idx) => {
-        const co = attendance.checkOuts?.[idx]
-          ? new Date(attendance.checkOuts[idx])
-          : new Date();
-        return bOut >= new Date(ci) && bIn <= co;
-      });
-
-      if (sessionIndex !== -1) {
-        totalMs += bIn - bOut;
-      }
-    }
-
-    return totalMs; // in milliseconds
-  };
-
-  // Flag Over Break per Session
   const allowedBreakMs = 60 * 60 * 1000; // 1 hour
-
   const getBreakStatus = (attendance) => {
     return attendance.checkIns.map((ci, idx) => {
       const co = attendance.checkOuts?.[idx]
         ? new Date(attendance.checkOuts[idx])
         : new Date();
       let sessionBreakMs = 0;
-
       for (let j = 0; j < attendance.breakOuts?.length; j++) {
         const bOut = new Date(attendance.breakOuts[j]);
         const bIn = attendance.breakIns?.[j]
           ? new Date(attendance.breakIns[j])
           : new Date();
-
         if (bOut >= new Date(ci) && bIn <= co) {
           sessionBreakMs += bIn - bOut;
         }
       }
-
-      return sessionBreakMs > allowedBreakMs; // true if over break
+      return sessionBreakMs > allowedBreakMs;
     });
   };
 
-  // late integration
   const isLate = (a, checkInTime) => {
     if (!a.employee.shift || !checkInTime) return false;
-
     const [startStr] = a.employee.shift
       .split("-")
       .map((s) => s.trim().toLowerCase());
-
     const parseTime = (timeStr, baseDate) => {
       const match = timeStr.match(/(\d+)(?::(\d+))?(am|pm)/i);
       if (!match) return null;
@@ -194,16 +170,11 @@ const AttendanceOverview = () => {
       d.setHours(hour, minute, 0, 0);
       return d;
     };
-
     const checkInDate = new Date(checkInTime);
     let shiftStart = parseTime(startStr, checkInDate);
-
-    // 🟢 If shift starts early morning (e.g. 1 AM) and check-in is late evening (≥ 8 PM),
-    // shift start belongs to the NEXT day
     if (shiftStart.getHours() < 5 && checkInDate.getHours() >= 20) {
       shiftStart.setDate(shiftStart.getDate() + 1);
     }
-
     return checkInDate > shiftStart;
   };
 
@@ -216,23 +187,19 @@ const AttendanceOverview = () => {
         Shift: a.employee.shift || "-",
         PIN: a.employee.pincode,
         "Check In(s)":
-          a.checkIns
-            ?.map((t) => new Date(t).toLocaleTimeString())
-            .join(", ") || "-",
+          a.checkIns?.map((t) => new Date(t).toLocaleTimeString()).join(", ") ||
+          "-",
         "Break Out(s)":
-          a.breakOuts
-            ?.map((t) => new Date(t).toLocaleTimeString())
-            .join(", ") || "-",
+          a.breakOuts?.map((t) => new Date(t).toLocaleTimeString()).join(", ") ||
+          "-",
         "Break In(s)":
-          a.breakIns
-            ?.map((t) => new Date(t).toLocaleTimeString())
-            .join(", ") || "-",
+          a.breakIns?.map((t) => new Date(t).toLocaleTimeString()).join(", ") ||
+          "-",
         "Check Out(s)":
-          a.checkOuts
-            ?.map((t) => new Date(t).toLocaleTimeString())
-            .join(", ") || "-",
+          a.checkOuts?.map((t) => new Date(t).toLocaleTimeString()).join(", ") ||
+          "-",
         "Total Hours": calculateTotalHours(a),
-        Status: a.status || "-", // ✅ include status in export
+        Status: a.status || "-",
       }))
     );
     const workbook = XLSX.utils.book_new();
@@ -265,26 +232,34 @@ const AttendanceOverview = () => {
         a.employee.position,
         a.employee.shift || "-",
         a.employee.pincode,
-        a.checkIns
-          ?.map((t) => new Date(t).toLocaleTimeString())
-          .join(", ") || "-",
-        a.breakOuts
-          ?.map((t) => new Date(t).toLocaleTimeString())
-          .join(", ") || "-",
-        a.breakIns
-          ?.map((t) => new Date(t).toLocaleTimeString())
-          .join(", ") || "-",
-        a.checkOuts
-          ?.map((t) => new Date(t).toLocaleTimeString())
-          .join(", ") || "-",
+        a.checkIns?.map((t) => new Date(t).toLocaleTimeString()).join(", ") ||
+          "-",
+        a.breakOuts?.map((t) => new Date(t).toLocaleTimeString()).join(", ") ||
+          "-",
+        a.breakIns?.map((t) => new Date(t).toLocaleTimeString()).join(", ") ||
+          "-",
+        a.checkOuts?.map((t) => new Date(t).toLocaleTimeString()).join(", ") ||
+          "-",
         calculateTotalHours(a),
-        a.status || "-", // ✅ include status in PDF
+        a.status || "-",
       ]),
       startY: 20,
       styles: { fontSize: 8 },
     });
     doc.save("attendances.pdf");
   };
+
+  // ✅ Calendar events
+  const calendarEvents = attendances.map((a) => ({
+    title: `${a.employee.fullName} - ${a.status || "Present"}`,
+    start: a.date,
+    color:
+      a.status === "Absent"
+        ? "#e53935"
+        : a.status === "OnLeave"
+        ? "#1e88e5"
+        : "#43a047",
+  }));
 
   return (
     <Box
@@ -315,6 +290,54 @@ const AttendanceOverview = () => {
           </Button>
         </Stack>
       </Stack>
+
+      {/* Calendar Section */}
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: 1200,
+          mb: 5,
+          borderRadius: 3,
+          boxShadow: 6,
+          p: 2,
+          bgcolor: "background.paper",
+        }}
+      >
+        <Typography variant="h5" fontWeight="bold" mb={2} textAlign="center">
+          📅 Company Attendance Calendar
+        </Typography>
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          headerToolbar={{
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay",
+          }}
+          events={calendarEvents}
+          height="auto"
+          eventDisplay="block"
+          selectable={true}
+          editable={false}
+          dayMaxEvents={3}
+          dateClick={handleDateClick} // ✅ link calendar click
+        />
+        {selectedDate && (
+          <Box textAlign="center" mt={2}>
+            <Typography variant="body1" fontWeight="bold">
+              Showing records for: {selectedDate}
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ mt: 1 }}
+              onClick={() => setSelectedDate(null)}
+            >
+              Clear Date Filter
+            </Button>
+          </Box>
+        )}
+      </Box>
 
       {/* Filters */}
       <Stack
@@ -362,7 +385,22 @@ const AttendanceOverview = () => {
             sx={{ borderRadius: 2, maxWidth: 1200 }}
           >
             <Table>
-              <TableHead sx={{ backgroundColor: theme.palette.grey[100] }}>
+              <TableHead
+                sx={{
+                  backgroundColor:
+                    theme.palette.mode === "dark"
+                      ? theme.palette.grey[900]
+                      : theme.palette.grey[200],
+                  "& .MuiTableCell-root": {
+                    color:
+                      theme.palette.mode === "dark"
+                        ? theme.palette.common.white
+                        : theme.palette.text.primary,
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  },
+                }}
+              >
                 <TableRow>
                   <TableCell>
                     <b>Date</b>
@@ -396,26 +434,21 @@ const AttendanceOverview = () => {
                   </TableCell>
                   <TableCell>
                     <b>Status</b>
-                  </TableCell> {/* ✅ New column */}
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {currentAttendances.map((a) => {
-                  const breakStatus = getBreakStatus(a); // array of booleans per check-in session
-
+                  const breakStatus = getBreakStatus(a);
                   return (
                     <TableRow key={a._id} hover>
                       <TableCell>
-                        {a.date
-                          ? new Date(a.date).toLocaleDateString()
-                          : "-"}
+                        {a.date ? new Date(a.date).toLocaleDateString() : "-"}
                       </TableCell>
                       <TableCell>{a.employee.fullName}</TableCell>
                       <TableCell>{a.employee.position}</TableCell>
                       <TableCell>{a.employee.shift || "-"}</TableCell>
                       <TableCell>{a.employee.pincode}</TableCell>
-
-                      {/* Check-ins */}
                       <TableCell>
                         {a.checkIns?.map((t, idx) => {
                           const late = isLate(a, t);
@@ -433,8 +466,6 @@ const AttendanceOverview = () => {
                           );
                         }) || "-"}
                       </TableCell>
-
-                      {/* Break Outs */}
                       <TableCell>
                         {a.breakOuts?.map((t, idx) => (
                           <div
@@ -449,8 +480,6 @@ const AttendanceOverview = () => {
                           </div>
                         )) || "-"}
                       </TableCell>
-
-                      {/* Break Ins */}
                       <TableCell>
                         {a.breakIns?.map((t, idx) => (
                           <div
@@ -465,21 +494,19 @@ const AttendanceOverview = () => {
                           </div>
                         )) || "-"}
                       </TableCell>
-
-                      {/* Check-outs */}
                       <TableCell>
                         {a.checkOuts?.map((t, idx) => (
-                          <div key={idx}>{new Date(t).toLocaleTimeString()}</div>
+                          <div key={idx}>
+                            {new Date(t).toLocaleTimeString()}
+                          </div>
                         )) || "-"}
                       </TableCell>
-
-                      {/* Total hours */}
                       <TableCell>{calculateTotalHours(a)}</TableCell>
-
-                      {/* ✅ Status */}
                       <TableCell>
                         <Typography
-                          color={a.status === "Absent" ? "error" : "success.main"}
+                          color={
+                            a.status === "Absent" ? "error" : "success.main"
+                          }
                           fontWeight="bold"
                         >
                           {a.status || "-"}
@@ -492,7 +519,6 @@ const AttendanceOverview = () => {
             </Table>
           </TableContainer>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <Box mt={2}>
               <Pagination

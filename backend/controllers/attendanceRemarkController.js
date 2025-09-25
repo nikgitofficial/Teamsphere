@@ -4,7 +4,7 @@ import { put, del } from "@vercel/blob";
 // Create
 export const createRemark = async (req, res) => {
   try {
-    const { employee, type, reason, remarks, status } = req.body;
+    const { employee, type,departments,reason, remarks, status } = req.body;
     let fileData;
 
     if (req.file) {
@@ -26,6 +26,7 @@ export const createRemark = async (req, res) => {
     const remark = new AttendanceRemark({
       employee,
       type,
+      departments,
       reason,
       remarks,
       status,
@@ -69,10 +70,11 @@ export const updateRemark = async (req, res) => {
     const remark = await AttendanceRemark.findById(req.params.id);
     if (!remark) return res.status(404).json({ message: "Remark not found" });
 
-    const { employee, type, reason, remarks, status } = req.body;
+    const { employee, type, departments,reason, remarks, status } = req.body;
 
     remark.employee = employee || remark.employee;
     remark.type = type || remark.type;
+    remark.departments = departments || remark.departments;
     remark.reason = reason || remark.reason;
     remark.remarks = remarks || remark.remarks;
     remark.status = status || remark.status;

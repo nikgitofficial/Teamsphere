@@ -32,7 +32,7 @@ import {
   Avatar,
   Chip,
 } from "@mui/material";
-import { Delete, Edit } from "@mui/icons-material";
+import { Delete, Edit,ContentCopy } from "@mui/icons-material";
 import axios from "../../api/axios";
 
 // ✅ Export imports
@@ -444,7 +444,25 @@ const EmployeePage = () => {
 <TableCell>{emp.status || "-"}</TableCell>
 
 
-                    <TableCell>{emp.pincode}</TableCell>
+                    <TableCell>
+  <Stack direction="row" alignItems="center" spacing={1}>
+    <Typography>{emp.pincode}</Typography>
+    <Tooltip title="Copy PIN" arrow>
+      <IconButton
+        size="small"
+        onClick={() => {
+          navigator.clipboard.writeText(emp.pincode);
+          setOpenSnackbar({ open: true, msg: "PIN copied to clipboard!" });
+          
+        }}
+        
+      >
+        <ContentCopy fontSize="small" sx={{ fill: "black" }} />
+      </IconButton>
+    </Tooltip>
+  </Stack>
+</TableCell>
+
                     <TableCell align="center">
   <Tooltip title="Edit Employee" arrow>
     <IconButton color="primary" onClick={() => handleEdit(emp)}>

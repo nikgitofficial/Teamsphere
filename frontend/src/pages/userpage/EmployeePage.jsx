@@ -76,6 +76,7 @@ const EmployeePage = () => {
     emergencyContact: { name: "", relation: "", phone: "" },
     profilePic: "",
     shift: "", // ✅ shift
+    restDays: [], 
   });
   const [file, setFile] = useState(null);
   const [editId, setEditId] = useState(null);
@@ -197,6 +198,7 @@ const EmployeePage = () => {
         emergencyContact: { name: "", relation: "", phone: "" },
         profilePic: "",
         shift: "",
+        restDays: [], 
       });
       setFile(null);
       setEditId(null);
@@ -269,6 +271,7 @@ const EmployeePage = () => {
       },
       profilePic: employee.profilePic || "",
       shift: employee.shift || "",
+      restDays: employee.restDays || [],
     });
     setEditId(employee._id);
     setOpenDialog(true);
@@ -300,6 +303,7 @@ const EmployeePage = () => {
         "Full Name": emp.fullName,
         Position: emp.position,
         Shift: emp.shift || "-",
+        RestDays: emp.restDays?.join(", ") || "-",
         PIN: emp.pincode,
         "Created Date": emp.createdAt
           ? new Date(emp.createdAt).toLocaleString()
@@ -321,6 +325,7 @@ const EmployeePage = () => {
         emp.fullName,
         emp.position,
         emp.shift || "-",
+        emp.restDays?.join(", ") || "-",
         emp.pincode,
         emp.createdAt ? new Date(emp.createdAt).toLocaleString() : "-",
       ]),
@@ -390,6 +395,7 @@ const EmployeePage = () => {
                   <TableCell><strong>Position</strong></TableCell>
                   <TableCell><strong>Gender</strong></TableCell>
                   <TableCell><strong>Shift</strong></TableCell>
+                  <TableCell><strong>Rest Days</strong></TableCell>
                   <TableCell><strong>Work Status</strong></TableCell>
                   <TableCell><strong>Phone</strong></TableCell>
                   <TableCell><strong>Status</strong></TableCell>
@@ -425,6 +431,7 @@ const EmployeePage = () => {
                     <TableCell>{emp.position}</TableCell>
                     <TableCell>{emp.gender || "-"}</TableCell>
                           <TableCell>{emp.shift || "-"}</TableCell>
+                          <TableCell>{emp.restDays?.join(", ") || "-"}</TableCell>
 <TableCell>
   <Chip
     label={emp.workStatus || "N/A"}
@@ -639,6 +646,24 @@ const EmployeePage = () => {
               onChange={(e) => setForm({ ...form, shift: e.target.value })}
               fullWidth
             />
+             <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Rest Days</InputLabel>
+            <Select
+              multiple
+              value={form.restDays}
+              onChange={(e) =>
+                setForm({ ...form, restDays: e.target.value.slice(0, 2) }) // ✅ max 2 rest days
+              }
+            >
+              {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(
+                (day) => (
+                  <MenuItem key={day} value={day}>
+                    {day}
+                  </MenuItem>
+                )
+              )}
+            </Select>
+          </FormControl>
             <TextField
               label="Department"
               value={form.department}
@@ -874,6 +899,10 @@ const EmployeePage = () => {
         <Grid item xs={6}>
           <Typography variant="body2" color="text.secondary">Shift</Typography>
           <Typography fontWeight={500}>{viewEmployee.shift || "-"}</Typography>
+        </Grid>
+         <Grid item xs={6}>
+          <Typography variant="body2" color="text.secondary">Rest Days</Typography>
+          <Typography fontWeight={500}>{viewEmployee.restDays || "-"}</Typography>
         </Grid>
         <Grid item xs={6}>
           <Typography variant="body2" color="text.secondary">Department</Typography>

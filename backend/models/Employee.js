@@ -44,6 +44,7 @@ const employeeSchema = new mongoose.Schema(
     },
 
     shift: { type: String, default: "8am-5pm" },
+    restDays: [],
     emergencyContact: {
       name: String,
       relation: String,

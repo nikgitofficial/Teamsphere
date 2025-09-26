@@ -46,7 +46,7 @@ export const createRemark = async (req, res) => {
 export const getRemarks = async (req, res) => {
   try {
     const remarks = await AttendanceRemark.find()
-      .populate("employee", "fullName position");
+      .populate("employee", "fullName position profilePic");
     res.json(remarks);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -57,7 +57,7 @@ export const getRemarks = async (req, res) => {
 export const getRemarksByEmployee = async (req, res) => {
   try {
     const remarks = await AttendanceRemark.find({ employee: req.params.employeeId })
-      .populate("employee", "fullName position");
+      .populate("employee", "fullName position profilePic");
     res.json(remarks);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -112,6 +112,11 @@ export const deleteRemark = async (req, res) => {
   try {
     const remark = await AttendanceRemark.findByIdAndDelete(req.params.id);
     if (!remark) return res.status(404).json({ message: "Remark not found" });
+
+    if (remark.file?.filename) {
+      await del(remark.file.filename); // delete file from Vercel Blob
+    }
+
     res.json({ message: "Remark deleted" });
   } catch (err) {
     res.status(500).json({ error: err.message });

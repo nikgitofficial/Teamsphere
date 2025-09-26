@@ -199,15 +199,22 @@ const Dashboard = () => {
     },
   }}>
           <ListItemButton
-            component={Link}
-            to="/dashboard/home"
-            selected={location.pathname === "/dashboard/home"}
-          >
-            <ListItemIcon>
-              <Home sx={{ color: "orange" }} />
-            </ListItemIcon>
-            <ListItemText primary="Home" sx={{ color: "white" }} />
-          </ListItemButton>
+  component={Link}
+  to="/dashboard/home"
+  selected={location.pathname === "/dashboard/home"}
+>
+  <ListItemIcon>
+    <Home sx={{ color: location.pathname === "/dashboard/home" ? "orange" : "gray" }} />
+  </ListItemIcon>
+  <ListItemText
+    primary="Home"
+    sx={{
+      color: location.pathname === "/dashboard/home" ? "orange" : "white",
+      fontWeight: location.pathname === "/dashboard/home" ? "bold" : "normal",
+    }}
+  />
+</ListItemButton>
+
 
           <ListItemButton
   component={Link}

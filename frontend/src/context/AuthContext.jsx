@@ -1,6 +1,8 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "../api/axios";
 import CircularProgress from "@mui/material/CircularProgress";
+import LinearProgress from "@mui/material/LinearProgress";
+import Box from "@mui/material/Box";
 
 export const AuthContext = createContext();
 
@@ -93,22 +95,25 @@ export const AuthProvider = ({ children }) => {
             position: "relative",
           }}
         >
+          {/* Logo */}
           <div style={{ position: "relative", marginBottom: "16px" }}>
-            <CircularProgress size={100} thickness={5} />
             <img
               src="/favicon.ico"
               alt="Logo"
               style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                width: 50,
-                height: 50,
+                width: 60,
+                height: 60,
                 borderRadius: "50%",
               }}
             />
           </div>
+
+          {/* Linear progress bar under logo */}
+          <Box sx={{ width: "70%", mb: 2 }}>
+            <LinearProgress variant="determinate" value={loadingPercent} />
+          </Box>
+
+          {/* Progress text */}
           <p style={{ fontSize: 18, color: "#555" }}>
             Verifying... {loadingPercent}%
           </p>

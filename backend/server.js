@@ -11,6 +11,8 @@ import profileRoutes from './routes/profileRoutes.js';
 import payrollRoutes from "./routes/payrollRoutes.js";
 import attendanceRemarkRoutes from "./routes/attendanceRemarkRoutes.js";
 
+import employeeAuthRoutes from "./routes/employeeAuth.js";
+
 
 
 
@@ -52,7 +54,7 @@ app.use("/api/attendance", attendanceRoutes);
 app.use('/api/profile', profileRoutes);
 app.use("/api/payroll", payrollRoutes);
 app.use("/api/attendance-remarks", attendanceRemarkRoutes);
-
+app.use("/api/employee-auth", employeeAuthRoutes);
 
 
 

@@ -18,9 +18,12 @@ import Settings  from "./pages/userpage/Settings.jsx";
 import PayrollOverview from "./pages/userpage/PayrollOverview";
 import AttendanceRemarks from "./pages/userpage/AttendanceRemarks.jsx";
 
-
 //public page
 import About from "./pages/public/About.jsx";
+
+// New Employee pages
+import EmployeeLogin from "./pages/employee/EmployeeLogin.jsx";
+import EmployeeDataPage from "./pages/employee/EmployeeDataPage.jsx";
 
 // ProtectedRoute
 const ProtectedRoute = ({ user, children }) => {
@@ -51,7 +54,9 @@ const App = () => {
             {/*public route*/}
             <Route path="/about" element={<About />} />
 
-
+            {/* Employee routes */}
+            <Route path="/employee-login" element={<EmployeeLogin />} />
+            <Route path="/employee-data" element={<EmployeeDataPage />} />
 
             {/* Protected routes */}
             <Route element={<ProtectedRoute user={user}><Layout /></ProtectedRoute>}>

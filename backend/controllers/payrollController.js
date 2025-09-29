@@ -7,15 +7,12 @@ import { calculateHours } from "../utils/calculateHours.js";
 export const generatePayroll = async (req, res) => {
   try {
     const { startDate, endDate } = req.body;
-
-    if (!startDate || !endDate) {
-      return res.status(400).json({ msg: "Start date and end date are required" });
-    }
+    if (!startDate || !endDate) return res.status(400).json({ msg: "Start date and end date are required" });
 
     const start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
+    start.setHours(0,0,0,0);
     const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
+    end.setHours(23,59,59,999);
 
     const employees = await Employee.find({ user: req.user.id });
     const payrolls = [];
@@ -26,13 +23,18 @@ export const generatePayroll = async (req, res) => {
         date: { $gte: start, $lte: end },
       });
 
-      const totalHours = attendances.reduce((sum, a) => sum + calculateHours(a), 0);
-      const totalDays = totalHours / 8; // ✅ Convert hours → days
+      let totalHours = attendances.reduce((sum, a) => sum + calculateHours(a), 0);
 
+      // ✅ Check if a manual override exists
+      let payroll = await Payroll.findOne({ employee: emp._id, startDate: start, endDate: end });
+      if (payroll && payroll.manualTotalHours !== null) {
+        totalHours = payroll.manualTotalHours; // Keep manual totalHours
+      }
+
+      const totalDays = totalHours / 8; 
       const ratePerHour = emp.ratePerHour || 0;
       const grossPay = totalHours * ratePerHour;
 
-      // ✅ Deductions breakdown integration
       const deductions = {
         absent: emp.deductions?.absent || 0,
         late: emp.deductions?.late || 0,
@@ -42,19 +44,11 @@ export const generatePayroll = async (req, res) => {
         tin: emp.deductions?.tin || 0,
         other: emp.deductions?.other || 0,
       };
-
-      deductions.total =
-        deductions.absent +
-        deductions.late +
-        deductions.sss +
-        deductions.philhealth +
-        deductions.pagibig +
-        deductions.tin +
-        deductions.other;
+      deductions.total = Object.values(deductions).reduce((a,b) => a+b,0);
 
       const netPay = grossPay - deductions.total;
 
-      const payroll = await Payroll.findOneAndUpdate(
+      payroll = await Payroll.findOneAndUpdate(
         { employee: emp._id, startDate: start, endDate: end },
         { totalHours, totalDays, ratePerHour, grossPay, deductions, netPay },
         { upsert: true, new: true }
@@ -72,19 +66,16 @@ export const generatePayroll = async (req, res) => {
   }
 };
 
-// ✅ Generate payslip for a single employee
+// Generate payslip for a single employee
 export const generatePayslip = async (req, res) => {
   try {
     const { employeeId, startDate, endDate } = req.body;
-
-    if (!employeeId || !startDate || !endDate) {
-      return res.status(400).json({ msg: "Employee ID, start date and end date are required" });
-    }
+    if (!employeeId || !startDate || !endDate) return res.status(400).json({ msg: "Employee ID, start date and end date are required" });
 
     const start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
+    start.setHours(0,0,0,0);
     const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
+    end.setHours(23,59,59,999);
 
     const employee = await Employee.findOne({ _id: employeeId, user: req.user.id });
     if (!employee) return res.status(404).json({ msg: "Employee not found" });
@@ -94,13 +85,15 @@ export const generatePayslip = async (req, res) => {
       date: { $gte: start, $lte: end },
     });
 
-    const totalHours = attendances.reduce((sum, a) => sum + calculateHours(a), 0);
-    const totalDays = totalHours / 8; // ✅ Convert hours → days
+    let totalHours = attendances.reduce((sum, a) => sum + calculateHours(a), 0);
 
+    let payroll = await Payroll.findOne({ employee: employee._id, startDate: start, endDate: end });
+    if (payroll && payroll.manualTotalHours !== null) totalHours = payroll.manualTotalHours;
+
+    const totalDays = totalHours / 8;
     const ratePerHour = employee.ratePerHour || 0;
     const grossPay = totalHours * ratePerHour;
 
-    // ✅ Deductions breakdown integration
     const deductions = {
       absent: employee.deductions?.absent || 0,
       late: employee.deductions?.late || 0,
@@ -110,25 +103,44 @@ export const generatePayslip = async (req, res) => {
       tin: employee.deductions?.tin || 0,
       other: employee.deductions?.other || 0,
     };
-
-    deductions.total =
-      deductions.absent +
-      deductions.late +
-      deductions.sss +
-      deductions.philhealth +
-      deductions.pagibig +
-      deductions.tin +
-      deductions.other;
+    deductions.total = Object.values(deductions).reduce((a,b) => a+b,0);
 
     const netPay = grossPay - deductions.total;
 
-    const payroll = await Payroll.findOneAndUpdate(
+    payroll = await Payroll.findOneAndUpdate(
       { employee: employee._id, startDate: start, endDate: end },
       { totalHours, totalDays, ratePerHour, grossPay, deductions, netPay },
       { upsert: true, new: true }
     ).populate("employee", "fullName position pincode");
 
     res.json({ msg: "✅ Payslip generated", payslip: payroll });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
+};
+
+// Update total hours for a payroll (manual override)
+export const updateTotalHours = async (req, res) => {
+  try {
+    const { payrollId } = req.params;
+    const { totalHours } = req.body;
+
+    if (totalHours == null || isNaN(totalHours) || totalHours < 0) return res.status(400).json({ msg: "Total hours must be valid" });
+
+    const payroll = await Payroll.findById(payrollId);
+    if (!payroll) return res.status(404).json({ msg: "Payroll not found" });
+
+    // Update manual total hours and recalc
+    payroll.manualTotalHours = totalHours;
+    payroll.totalHours = totalHours;
+    payroll.totalDays = totalHours / 8;
+    payroll.grossPay = totalHours * payroll.ratePerHour;
+    payroll.netPay = payroll.grossPay - (payroll.deductions.total || 0);
+
+    await payroll.save();
+
+    const updatedPayroll = await Payroll.findById(payrollId).populate("employee", "fullName position pincode");
+    res.json({ msg: "✅ Total hours updated", payroll: updatedPayroll });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }

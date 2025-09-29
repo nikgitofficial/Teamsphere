@@ -29,14 +29,13 @@ const Login = () => {
     severity: "success",
   });
 
-  const [showPassword, setShowPassword] = useState(false); // ✅ Toggle state
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
   const { user, setUser } = useContext(AuthContext);
 
-  // ✅ Redirect if already logged in
   useEffect(() => {
-    if (user) navigate("/dashboard");
+    if (user) navigate("/dashboard/home");
   }, [user, navigate]);
 
   const handleChange = (e) => {
@@ -52,11 +51,9 @@ const Login = () => {
       const res = await axios.post("/auth/login", form, { withCredentials: true });
       const { accessToken, refreshToken } = res.data;
 
-      // ✅ Save tokens
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
 
-      // ✅ Get user info
       const me = await axios.get("/auth/me", {
         headers: { Authorization: `Bearer ${accessToken}` },
         withCredentials: true,
@@ -65,19 +62,17 @@ const Login = () => {
       setUser(me.data);
       localStorage.setItem("user", JSON.stringify(me.data));
 
-      // ✅ Show success snackbar
       setSnack({
         open: true,
         message: "✅ Login successful! Redirecting...",
         severity: "success",
       });
 
-      setTimeout(() => navigate("/dashboard"), 1500);
+      setTimeout(() => navigate("/dashboard/home"), 1500);
     } catch (err) {
       const msg = err.response?.data?.msg || "❌ Login failed. Try again.";
       setError(msg);
 
-      // ✅ Show error snackbar
       setSnack({
         open: true,
         message: msg,
@@ -119,7 +114,7 @@ const Login = () => {
           <TextField
             name="password"
             label="Password"
-            type={showPassword ? "text" : "password"} // ✅ Toggle type
+            type={showPassword ? "text" : "password"}
             value={form.password}
             onChange={handleChange}
             fullWidth
@@ -152,9 +147,16 @@ const Login = () => {
             Register here
           </Link>
         </Typography>
+
+        {/* ✅ Employee Login link */}
+        <Typography variant="body2" align="center" sx={{ mt: 1 }}>
+          Are you an employee?{" "}
+          <Link to="/employee-login" style={{ textDecoration: "none", color: "#1976d2", fontWeight: 500 }}>
+            Employee Login
+          </Link>
+        </Typography>
       </Paper>
 
-      {/* ✅ Snackbar with severity (like Register page) */}
       <Snackbar
         open={snack.open}
         autoHideDuration={3000}

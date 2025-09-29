@@ -22,6 +22,7 @@ const payrollSchema = new mongoose.Schema({
   },
 
   netPay: { type: Number, default: 0 },
+  manualTotalHours: { type: Number, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 

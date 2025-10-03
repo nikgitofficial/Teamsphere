@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import { AuthContext } from "../../context/AuthContext";
@@ -28,6 +28,40 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PaymentIcon from "@mui/icons-material/Payment";
 import EventBusyIcon from "@mui/icons-material/EventBusy"; // Absent
 import BeachAccessIcon from "@mui/icons-material/BeachAccess"; // Leave
+
+// Fade-up on scroll component
+const FadeUpOnScroll = ({ children, threshold = 0.2, delay = 0 }) => {
+  const ref = useRef();
+  const [isVisible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => setVisible(true), delay);
+          observer.unobserve(ref.current);
+        }
+      },
+      { threshold }
+    );
+    if (ref.current) observer.observe(ref.current);
+
+    return () => observer.disconnect();
+  }, [threshold, delay]);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? "translateY(0)" : "translateY(40px)",
+        transition: `opacity 0.8s ease-out, transform 0.8s ease-out`,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
 
 const Home = () => {
   const navigate = useNavigate();
@@ -183,17 +217,54 @@ const Home = () => {
       }}
     >
       <Box sx={{ width: "100%", maxWidth: "1200px" }}>
-        <Typography variant="h4" fontWeight="bold" textAlign="center" gutterBottom>
-          Welcome {user?.name || "User"} 👋
-        </Typography>
+        <FadeUpOnScroll>
+          <Typography variant="h4" fontWeight="bold" textAlign="center" gutterBottom>
+            Welcome {user?.name || "User"} 👋
+          </Typography>
+        </FadeUpOnScroll>
 
         <Grid container spacing={3} sx={{ mb: 4 }}>
           {kpiCards.map((card, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
-              {card.clickable ? (
-                <Tooltip title="View Table" arrow>
+            <FadeUpOnScroll key={index} delay={index * 100}>
+              <Grid item xs={12} sm={6} md={4} lg={3}>
+                {card.clickable ? (
+                  <Tooltip title="View Table" arrow>
+                    <Card
+                      onClick={() => handleCardClick(card.type)}
+                      sx={{
+                        borderRadius: 4,
+                        height: 150,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "white",
+                        cursor: "pointer",
+                        boxShadow: 6,
+                        transition: "all 0.3s ease",
+                        background: card.bgColor,
+                        "&:hover": {
+                          transform: "translateY(-6px)",
+                          boxShadow: 10,
+                        },
+                      }}
+                    >
+                      <CardContent sx={{ textAlign: "center" }}>
+                        {card.icon}
+                        <Typography variant="h6" sx={{ mt: 1, fontWeight: "bold" }}>
+                          {card.title}
+                        </Typography>
+                        {card.loading ? (
+                          <CircularProgress size={28} sx={{ mt: 1, color: "white" }} />
+                        ) : (
+                          <Typography variant="h3" fontWeight="bold" sx={{ mt: 1 }}>
+                            {card.value}
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Tooltip>
+                ) : (
                   <Card
-                    onClick={() => handleCardClick(card.type)}
                     sx={{
                       borderRadius: 4,
                       height: 150,
@@ -201,14 +272,9 @@ const Home = () => {
                       alignItems: "center",
                       justifyContent: "center",
                       color: "white",
-                      cursor: "pointer",
                       boxShadow: 6,
                       transition: "all 0.3s ease",
                       background: card.bgColor,
-                      "&:hover": {
-                        transform: "translateY(-6px)",
-                        boxShadow: 10,
-                      },
                     }}
                   >
                     <CardContent sx={{ textAlign: "center" }}>
@@ -225,67 +291,41 @@ const Home = () => {
                       )}
                     </CardContent>
                   </Card>
-                </Tooltip>
-              ) : (
-                <Card
-                  sx={{
-                    borderRadius: 4,
-                    height: 150,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "white",
-                    boxShadow: 6,
-                    transition: "all 0.3s ease",
-                    background: card.bgColor,
-                  }}
-                >
-                  <CardContent sx={{ textAlign: "center" }}>
-                    {card.icon}
-                    <Typography variant="h6" sx={{ mt: 1, fontWeight: "bold" }}>
-                      {card.title}
-                    </Typography>
-                    {card.loading ? (
-                      <CircularProgress size={28} sx={{ mt: 1, color: "white" }} />
-                    ) : (
-                      <Typography variant="h3" fontWeight="bold" sx={{ mt: 1 }}>
-                        {card.value}
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </Grid>
+                )}
+              </Grid>
+            </FadeUpOnScroll>
           ))}
         </Grid>
 
-        <Card sx={{ borderRadius: 3, boxShadow: 6 }}>
-          <CardContent>
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
-              Recent Hires
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            {recentEmployees.length === 0 ? (
-              <Typography color="text.secondary">No recent hires found.</Typography>
-            ) : (
-              <List>
-                {recentEmployees.map((emp) => (
-                  <ListItem key={emp._id} sx={{ px: 0 }}>
-                    <ListItemAvatar>
-                      <Avatar src={emp.profilePic}>{emp.fullName?.charAt(0)}</Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={emp.fullName}
-                      secondary={`${emp.position || "Employee"} • ${new Date(
-                        emp.createdAt
-                      ).toLocaleDateString()}`}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-          </CardContent>
-        </Card>
+        <FadeUpOnScroll>
+          <Card sx={{ borderRadius: 3, boxShadow: 6 }}>
+            <CardContent>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Recent Hires
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              {recentEmployees.length === 0 ? (
+                <Typography color="text.secondary">No recent hires found.</Typography>
+              ) : (
+                <List>
+                  {recentEmployees.map((emp) => (
+                    <ListItem key={emp._id} sx={{ px: 0 }}>
+                      <ListItemAvatar>
+                        <Avatar src={emp.profilePic}>{emp.fullName?.charAt(0)}</Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={emp.fullName}
+                        secondary={`${emp.position || "Employee"} • ${new Date(
+                          emp.createdAt
+                        ).toLocaleDateString()}`}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </CardContent>
+          </Card>
+        </FadeUpOnScroll>
       </Box>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="sm">
@@ -306,7 +346,6 @@ const Home = () => {
             <List>
               {dialogTitle === "All Employees"
                 ? dialogList.map((emp) => {
-                    // Map work status to color
                     let statusColor = "text.secondary";
                     switch (emp.workStatus) {
                       case "Active":
@@ -324,7 +363,6 @@ const Home = () => {
                       default:
                         statusColor = "text.secondary";
                     }
-
                     return (
                       <ListItem key={emp._id} alignItems="flex-start">
                         <ListItemAvatar>

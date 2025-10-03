@@ -8,6 +8,7 @@ import {
   getAllTodayAttendances,
   getAllAttendances,
   getAttendancesByDateRange,
+  getEmployeeAttendance, 
 } from "../controllers/attendanceController.js";
 import authenticate from "../middleware/authMiddleware.js";
 
@@ -22,5 +23,8 @@ router.get("/today/all", authenticate, getAllTodayAttendances);
 router.get("/all", authenticate, getAllAttendances);
 router.get("/range", authenticate, getAttendancesByDateRange);
 router.get("/:pincode", authenticate, getTodayAttendance);
+
+// ✅ Employee route (self-service, no token required)
+router.post("/employee", getEmployeeAttendance);
 
 export default router;

@@ -21,6 +21,8 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
 import axios from "../../api/axios";
 import { AuthContext } from "../../context/AuthContext";
 import * as XLSX from "xlsx";
@@ -47,6 +49,7 @@ const PayrollOverview = () => {
   // Payslip
   const [payslip, setPayslip] = useState(null);
   const [openPreview, setOpenPreview] = useState(false);
+  const [loadingPayslip, setLoadingPayslip] = useState(false); // NEW
 
   // Snackbar
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
@@ -105,6 +108,7 @@ const PayrollOverview = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       filteredPayrolls.map((p) => ({
         "Employee Name": p.employee.fullName,
+        Department: p.employee.department || "-",
         PIN: `••••${p.employee?.pincode?.slice(-2) || "--"}`,
         Period: `${startDate} to ${endDate}`,
         "Total Hours": formatHours(p.totalHours),
@@ -126,7 +130,7 @@ const PayrollOverview = () => {
 
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text("My Company Inc.", 105, 15, { align: "center" });
+    doc.text("NikTech Inc.", 105, 15, { align: "center" });
 
     doc.setFontSize(12);
     doc.text("Payroll Records", 105, 23, { align: "center" });
@@ -134,7 +138,7 @@ const PayrollOverview = () => {
 
     autoTable(doc, {
       startY: 40,
-      head: [["Employee", "PIN", "Period", "Total Hours", "Total Days", "Rate/Hour", "Gross Pay", "Deductions (Total)", "Net Pay"]],
+      head: [["Employee", "Department","PIN", "Period", "Total Hours", "Total Days", "Rate/Hour", "Gross Pay", "Deductions (Total)", "Net Pay"]],
       body: filteredPayrolls.map((p) => [
         p.employee.fullName,
         `••••${p.employee?.pincode?.slice(-2) || "--"}`,
@@ -160,6 +164,10 @@ const PayrollOverview = () => {
   };
 
   const handleViewPayslip = async (employeeId) => {
+    if (!startDate || !endDate) {
+      return setSnackbar({ open: true, message: "Please select start and end dates", severity: "warning" });
+    }
+    setLoadingPayslip(true);
     try {
       const { data } = await axios.post(
         "/payroll/payslip",
@@ -168,9 +176,12 @@ const PayrollOverview = () => {
       );
       setPayslip(data.payslip);
       setOpenPreview(true);
+      setSnackbar({ open: true, message: "Payslip loaded successfully", severity: "success" });
     } catch (err) {
       console.error(err);
       setSnackbar({ open: true, message: "Error fetching payslip", severity: "error" });
+    } finally {
+      setLoadingPayslip(false);
     }
   };
 
@@ -206,7 +217,7 @@ const PayrollOverview = () => {
         payslip.totalDays?.toFixed(2) || "0.00",
         formatHours(payslip.totalHours),
         `₱${payslip.ratePerHour.toFixed(2)}`,
-        `₱${p.grossPay.toFixed(2)}`
+        `₱${payslip.grossPay.toFixed(2)}`
       ]],
       theme: "striped",
       headStyles: { fillColor: [52, 152, 219], textColor: 255 },
@@ -337,12 +348,20 @@ const PayrollOverview = () => {
         <Typography>No payroll records found.</Typography>
       ) : (
         <>
-          <TableContainer component={Paper} sx={{ maxWidth: 1000 }}>
+          <TableContainer
+  component={Paper}
+  sx={{
+    width: "100%",       
+    maxWidth: "1200px",  
+    overflowX: "auto",  
+  }}
+>
             <Table>
               <TableHead>
                 <TableRow>
                   {[
                     "Employee",
+                    "Department",
                     "PIN",
                     "Period",
                     "Total Hours",
@@ -363,6 +382,7 @@ const PayrollOverview = () => {
                 {currentPayrolls.map((p) => (
                   <TableRow key={p._id}>
                     <TableCell>{p.employee.fullName}</TableCell>
+                    <TableCell>{p.employee.department || "-"}</TableCell>
                     <TableCell>{maskPIN(p.employee.pincode)}</TableCell>
                     <TableCell>{`${startDate} to ${endDate}`}</TableCell>
                     <TableCell>
@@ -379,23 +399,58 @@ const PayrollOverview = () => {
                     <TableCell>{p.deductions.total?.toFixed(2) || "0.00"}</TableCell>
                     <TableCell>{p.netPay.toFixed(2)}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => handleViewPayslip(p.employee._id)}
-                        sx={{ mr: 1 }}
-                      >
-                        View Payslip
-                      </Button>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        color="primary"
-                        onClick={() => handleEditHours(p)}
-                      >
-                        Edit Hours
-                      </Button>
-                    </TableCell>
+  <Stack direction="row" spacing={1} alignItems="center">
+    <Button
+      variant="contained"
+      size="small"
+      color="info"
+      onClick={() => handleViewPayslip(p.employee._id)}
+      disabled={loadingPayslip}
+      startIcon={
+        loadingPayslip ? (
+          <CircularProgress size={16} color="inherit" />
+        ) : (
+          <VisibilityIcon fontSize="small" />
+        )
+      }
+      sx={{
+        borderRadius: 3,
+        px: 2,
+        textTransform: "none",
+        fontWeight: 500,
+        boxShadow: 2,
+        "&:hover": { boxShadow: 4 },
+        minHeight: 36, // ensures consistent height
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      {loadingPayslip ? "Loading..." : "View Payslip"}
+    </Button>
+
+    <Button
+      variant="outlined"
+      size="small"
+      color="secondary"
+      onClick={() => handleEditHours(p)}
+      startIcon={<EditIcon fontSize="small" />}
+      sx={{
+        borderRadius: 3,
+        px: 2,
+        textTransform: "none",
+        fontWeight: 500,
+        borderWidth: 2,
+        "&:hover": { borderWidth: 2 },
+        minHeight: 36, // match the contained button
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      Edit Hours
+    </Button>
+  </Stack>
+</TableCell>
+
                   </TableRow>
                 ))}
               </TableBody>
@@ -427,10 +482,15 @@ const PayrollOverview = () => {
           Payslip Preview
         </DialogTitle>
         <DialogContent dividers sx={{ p: { xs: 2, sm: 3 } }}>
-          {payslip ? (
+          {loadingPayslip ? (
+            <Box display="flex" justifyContent="center" alignItems="center" height="120px">
+              <CircularProgress />
+            </Box>
+          ) : payslip ? (
             <Box display="flex" flexDirection="column" gap={2}>
               <Box display="grid" gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr" }} gap={2} sx={{ bgcolor: "background.default", p: 2, borderRadius: 2 }}>
                 <Typography variant="body1"><strong>Employee:</strong> {payslip.employee.fullName}</Typography>
+                <Typography variant="body1"><strong>Department:</strong> {payslip.employee.department || "-"}</Typography>
                 <Typography variant="body1"><strong>Position:</strong> {payslip.employee.position || "-"}</Typography>
                 <Typography variant="body1" color="text.secondary"><strong>PIN:</strong> ••••{payslip.employee?.pincode?.slice(-2) || "--"}</Typography>
                 <Typography variant="body1"><strong>Period:</strong> {new Date(payslip.startDate).toLocaleDateString()} - {new Date(payslip.endDate).toLocaleDateString()}</Typography>

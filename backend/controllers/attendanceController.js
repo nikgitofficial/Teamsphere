@@ -303,3 +303,35 @@ export const getAttendancesByDateRange = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
+
+// ✅ Get employee attendance (self-service, no token required)
+export const getEmployeeAttendance = async (req, res) => {
+  try {
+    const { employeeId, startDate, endDate } = req.body;
+    if (!employeeId || !startDate || !endDate) {
+      return res.status(400).json({ msg: "Employee ID, start date and end date are required" });
+    }
+
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const attendances = await Attendance.find({
+      employee: employeeId,
+      date: { $gte: start, $lte: end },
+    }).sort({ date: 1 });
+
+    if (!attendances.length) {
+      return res.status(404).json({ msg: "No attendance found for this period" });
+    }
+
+    res.json({ msg: "✅ Attendance fetched", attendances });
+  } catch (err) {
+    console.error("Error fetching attendance:", err);
+    res.status(500).json({ msg: "Server error fetching attendance" });
+  }
+};
+
+

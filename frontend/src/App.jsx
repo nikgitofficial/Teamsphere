@@ -6,6 +6,7 @@ import Layout from "./layouts/Layout";
 import Login from "./pages/public/Login.jsx";
 import Register from "./pages/public/Register.jsx";
 import Dashboard from "./components/Dashboard";
+import EmployeeDashboard from "./pages/employee/EmployeeDashboard.jsx";
 import Home from "./pages/userpage/Home";
 import Attendance from "./pages/userpage/Attendance.jsx";
 import AttendanceOverview from "./pages/userpage/AttendanceOverview.jsx";
@@ -18,23 +19,34 @@ import Settings  from "./pages/userpage/Settings.jsx";
 import PayrollOverview from "./pages/userpage/PayrollOverview";
 import AttendanceRemarks from "./pages/userpage/AttendanceRemarks.jsx";
 
-//public page
+// Public pages
 import About from "./pages/public/About.jsx";
 
-// New Employee pages
+// Employee pages
+import Index from "./pages/employee/Index.jsx";
 import EmployeeLogin from "./pages/employee/EmployeeLogin.jsx";
 import EmployeeDataPage from "./pages/employee/EmployeeDataPage.jsx";
+import EmployeeAttendancePage from "./pages/employee/EmployeeAttendancePage.jsx";
+import EmployeePayslipPage from "./pages/employee/EmployeePayslipPage.jsx";
 
-// ProtectedRoute
+
+// ProtectedRoute for Users
 const ProtectedRoute = ({ user, children }) => {
   if (!user) return <Navigate to="/login" replace />;
   return children;
 };
 
-// AdminRoute
+// AdminRoute for Users
 const AdminRoute = ({ user, children }) => {
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== "admin") return <Navigate to="/dashboard/home" replace />;
+  return children;
+};
+
+// ProtectedRoute for Employees
+const EmployeeProtectedRoute = ({ children }) => {
+  const employee = localStorage.getItem("employee"); // ✅ check employee login
+  if (!employee) return <Navigate to="/employee-login" replace />;
   return children;
 };
 
@@ -47,20 +59,43 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
-            <Route path="/login" element={!user ? <Login /> : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />} />
-            <Route path="/register" element={!user ? <Register /> : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />} />
-            <Route path="/forgot-password" element={!user ? <ForgotPassword /> : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />} />
+            <Route 
+              path="/login" 
+              element={!user ? <Login /> : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />} 
+            />
+            <Route 
+              path="/register" 
+              element={!user ? <Register /> : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />} 
+            />
+            <Route 
+              path="/forgot-password" 
+              element={!user ? <ForgotPassword /> : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />} 
+            />
             
-            {/*public route*/}
             <Route path="/about" element={<About />} />
 
             {/* Employee routes */}
             <Route path="/employee-login" element={<EmployeeLogin />} />
-            <Route path="/employee-data" element={<EmployeeDataPage />} />
+            <Route 
+              path="/employee-dashboard" 
+              element={<EmployeeProtectedRoute><EmployeeDashboard /></EmployeeProtectedRoute>}
+            >
+              <Route path="home" element={<Index />} />
+              <Route path="employees" element={<EmployeeDataPage />} />
+              <Route path="attendance" element={<EmployeeAttendancePage />} />
+              <Route path="remarks" element={<AttendanceRemarks />} />
+              <Route path="payroll" element={<EmployeePayslipPage />} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
 
-            {/* Protected routes */}
-            <Route element={<ProtectedRoute user={user}><Layout /></ProtectedRoute>}>
-              <Route path="/" element={<Navigate to={user ? (user.role === "admin" ? "/admin" : "/dashboard/home") : "/login"} />} />
+            {/* User protected routes */}
+            <Route 
+              element={<ProtectedRoute user={user}><Layout /></ProtectedRoute>}
+            >
+              <Route 
+                path="/" 
+                element={<Navigate to={user ? (user.role === "admin" ? "/admin" : "/dashboard/home") : "/login"} />} 
+              />
 
               <Route path="/dashboard" element={<Dashboard />}>
                 <Route path="home" element={<Home />} />

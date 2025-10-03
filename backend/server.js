@@ -17,6 +17,7 @@ import employeeAuthRoutes from "./routes/employeeAuth.js";
 
 
 
+
 dotenv.config();
 const app = express();
 
@@ -55,6 +56,7 @@ app.use('/api/profile', profileRoutes);
 app.use("/api/payroll", payrollRoutes);
 app.use("/api/attendance-remarks", attendanceRemarkRoutes);
 app.use("/api/employee-auth", employeeAuthRoutes);
+
 
 
 

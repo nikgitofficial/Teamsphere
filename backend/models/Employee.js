@@ -15,10 +15,10 @@ const employeeSchema = new mongoose.Schema(
       default: "Single",
     },
     workStatus: {
-  type: String,
-  enum: ["Active", "Inactive", "On Leave", "Terminated", "Probationary"],
-  default: "Active",
-},
+      type: String,
+      enum: ["Active", "Inactive", "On Leave", "Terminated", "Probationary"],
+      default: "Active",
+    },
     address: { type: String },
     phone: { type: String },
     email: { type: String },
@@ -31,7 +31,6 @@ const employeeSchema = new mongoose.Schema(
     pagibig: { type: String },
     philhealth: { type: String },
 
-    // ✅ Updated Deductions object
     deductions: {
       absent: { type: Number, default: 0 },
       late: { type: Number, default: 0 },

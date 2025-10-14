@@ -28,7 +28,7 @@ const CLIENT_URLS = [
   process.env.CLIENT_URL || "http://localhost:5173",
   "http://localhost:5173", // local dev
   "frontend-app.vercel.app",
-   "https://frontend-app.vercel.app", // deployed frontend
+   "https://teamsphere-lyart.vercel.app", // deployed frontend
   
   
 ];

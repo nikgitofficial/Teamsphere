@@ -23,6 +23,7 @@
     "@mui/x-date-pickers": "^8.11.2",
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.24",
     "jspdf": "^3.0.2",
     "jspdf-autotable": "^5.0.2",
     "react": "^19.1.1",

@@ -320,6 +320,10 @@ const Dashboard = () => {
             boxShadow: 1,
             bgcolor: "#000080", // AppBar black
             color: "white",
+             borderBottom: "2px solid #FF8C00",
+            borderRight: "2px solid #FF8C00",
+            borderTopRightRadius: "5px",
+            borderBottomRightRadius: "10px",
           }}
         >
           <Toolbar>
@@ -391,6 +395,7 @@ const Dashboard = () => {
                 pt: 2,
                 bgcolor: "#000080", // Drawer black
                 color: "white",
+                borderRight: "2px solid #FF8C00",
               },
             }}
           >

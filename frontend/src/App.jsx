@@ -29,23 +29,19 @@ import EmployeeDataPage from "./pages/employee/EmployeeDataPage.jsx";
 import EmployeeAttendancePage from "./pages/employee/EmployeeAttendancePage.jsx";
 import EmployeePayslipPage from "./pages/employee/EmployeePayslipPage.jsx";
 
-
-// ProtectedRoute for Users
 const ProtectedRoute = ({ user, children }) => {
   if (!user) return <Navigate to="/login" replace />;
   return children;
 };
 
-// AdminRoute for Users
 const AdminRoute = ({ user, children }) => {
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== "admin") return <Navigate to="/dashboard/home" replace />;
   return children;
 };
 
-// ProtectedRoute for Employees
 const EmployeeProtectedRoute = ({ children }) => {
-  const employee = localStorage.getItem("employee"); // ✅ check employee login
+  const employee = localStorage.getItem("employee");
   if (!employee) return <Navigate to="/employee-login" replace />;
   return children;
 };
@@ -58,21 +54,35 @@ const App = () => {
       <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <BrowserRouter>
           <Routes>
-            {/* Public routes */}
+            {/* Default route — show About first */}
+            <Route path="/" element={<Navigate to="/about" replace />} />
+
+            {/* Public routes wrapped with Layout */}
             <Route 
               path="/login" 
-              element={!user ? <Login /> : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />} 
+              element={
+                !user 
+                  ? <Layout><Login /></Layout> 
+                  : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />
+              } 
             />
             <Route 
               path="/register" 
-              element={!user ? <Register /> : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />} 
+              element={
+                !user 
+                  ? <Layout><Register /></Layout> 
+                  : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />
+              } 
             />
             <Route 
               path="/forgot-password" 
-              element={!user ? <ForgotPassword /> : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />} 
+              element={
+                !user 
+                  ? <Layout><ForgotPassword /></Layout> 
+                  : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />
+              } 
             />
-            
-            <Route path="/about" element={<About />} />
+            <Route path="/about" element={<Layout><About /></Layout>} />
 
             {/* Employee routes */}
             <Route path="/employee-login" element={<EmployeeLogin />} />
@@ -92,11 +102,6 @@ const App = () => {
             <Route 
               element={<ProtectedRoute user={user}><Layout /></ProtectedRoute>}
             >
-              <Route 
-                path="/" 
-                element={<Navigate to={user ? (user.role === "admin" ? "/admin" : "/dashboard/home") : "/login"} />} 
-              />
-
               <Route path="/dashboard" element={<Dashboard />}>
                 <Route path="home" element={<Home />} />
                 <Route path="employees" element={<EmployeePage />} />
@@ -111,7 +116,7 @@ const App = () => {
             </Route>
 
             {/* Catch-all */}
-            <Route path="*" element={<Navigate to={user ? "/dashboard/home" : "/login"} />} />
+            <Route path="*" element={<Navigate to="/about" replace />} />
           </Routes>
         </BrowserRouter>
       </Box>

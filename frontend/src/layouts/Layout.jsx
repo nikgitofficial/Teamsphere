@@ -5,11 +5,10 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar"; // ✅ import Navbar
 import { AuthContext } from "../context/AuthContext";
 
-const Layout = () => {
+const Layout = ({ children }) => { // accept children
   const { user } = useContext(AuthContext);
   const location = useLocation();
 
-  // ❌ Pages where footer should be hidden
   const hiddenFooterRoutes = [
     "/attendance",
     "/dashboard/home",
@@ -19,10 +18,9 @@ const Layout = () => {
     "/dashboard/settings",
     "/dashboard/payroll",
     "/dashboard/attendance-remarks",
-   
+    "/login",
   ];
 
-  // ❌ Pages where navbar should be hidden
   const hiddenNavbarRoutes = [
     "/attendance",
     "/dashboard/home",
@@ -32,28 +30,22 @@ const Layout = () => {
     "/dashboard/settings",
     "/dashboard/payroll",
     "/dashboard/attendance-remarks",
-    
-    
+    "/login",
   ];
 
-  // Check if the current route is in the hidden lists
   const shouldHideFooter = hiddenFooterRoutes.includes(location.pathname);
   const shouldHideNavbar = hiddenNavbarRoutes.includes(location.pathname);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      {/* Navbar (conditionally rendered) */}
-      {!shouldHideNavbar && <Navbar />} {/* ✅ Navbar hidden on dashboard routes */}
-
-      {/* Main Content */}
+      {!shouldHideNavbar && <Navbar />}
       <Box sx={{ flex: 1 }}>
-        <Outlet />
+        {children || <Outlet />} {/* render children if passed, else Outlet */}
       </Box>
-
-      {/* Footer (conditionally rendered) */}
       {!shouldHideFooter && <Footer />}
     </Box>
   );
 };
+
 
 export default Layout;

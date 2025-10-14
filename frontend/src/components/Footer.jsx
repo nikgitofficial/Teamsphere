@@ -104,7 +104,7 @@ const footerLinkStyles = {
 };
 
 export default function StickyFooter() {
-  const appPages = ["PublicHome", "Dashboard", "Login", "Register", "ForgotPassword", "Profile", "Settings"];
+  const appPages = ["Home", "Dashboard", "Login", "Register", "ForgotPassword", "Profile", "Settings"];
   const resourcesPages = ["Docs", "Guides", "FAQ", "Blog", "Analytics"];
   const companyPages = ["About", "Careers", "Community", "Contact"];
   const legalPages = ["Privacy", "Terms", "CookieSettings", "Security", "Sitemap", "Status"];
@@ -386,13 +386,15 @@ export default function StickyFooter() {
               <Typography variant="overline">Rate Us</Typography>
               <Box display="flex" alignItems="center" gap={1}>
                 <Rating
-                  value={ratingValue}
-                  onChange={(e, newValue) => setRatingValue(newValue)}
-                  sx={{
-                    "& .MuiRating-iconFilled": { color: "#FFB400" },
-                    "& .MuiRating-iconHover": { color: "#FFD700" },
-                  }}
-                />
+  value={ratingValue}
+  onChange={(e, newValue) => setRatingValue(newValue)}
+  sx={{
+    "& .MuiRating-iconEmpty": { color: "#fff" }, 
+    "& .MuiRating-iconFilled": { color: "#FFB400" }, 
+    "& .MuiRating-iconHover": { color: "#FFD700" }, 
+  }}
+/>
+
                 <Button
                   variant="contained"
                   size="small"

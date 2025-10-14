@@ -21,6 +21,21 @@ import AttendanceRemarks from "./pages/userpage/AttendanceRemarks.jsx";
 
 // Public pages
 import About from "./pages/public/About.jsx";
+import Privacy from "./pages/public/Privacy.jsx";
+import Terms from "./pages/public/Terms.jsx";
+import CookieSettings from "./pages/public/CookieSettings";
+import Security from "./pages/public/Security";
+import Sitemap from "./pages/public/Sitemap";
+import Status from "./pages/public/Status";
+import Careers from "./pages/public/Careers.jsx";
+import Community from "./pages/public/Community.jsx";
+import Contact from "./pages/public/Contact.jsx";
+import Docs from "./pages/public/Docs.jsx";
+import Guides from "./pages/public/Guides.jsx";
+import FAQ from "./pages/public/FAQ.jsx";
+import Blog from "./pages/public/Blog.jsx";
+import Analytics from "./pages/public/Analytics.jsx";
+
 
 // Employee pages
 import Index from "./pages/employee/Index.jsx";
@@ -56,6 +71,21 @@ const App = () => {
           <Routes>
             {/* Default route — show About first */}
             <Route path="/" element={<Navigate to="/about" replace />} />
+            <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
+            <Route path="/terms" element={<Layout><Terms /></Layout>} />
+            <Route path="/cookiesettings" element={<Layout><CookieSettings /></Layout>} />
+            <Route path="/security" element={<Layout><Security /></Layout>} />
+            <Route path="/sitemap" element={<Layout><Sitemap /></Layout>} />
+            <Route path="/status" element={<Layout><Status /></Layout>} />
+            <Route path="/careers" element={<Layout><Careers /></Layout>} />
+            <Route path="/community" element={<Layout><Community /></Layout>} />
+            <Route path="/contact" element={<Layout><Contact /></Layout>} />
+            <Route path="/docs" element={<Layout><Docs /></Layout>} />
+            <Route path="/guides" element={<Layout><Guides /></Layout>} />
+            <Route path="/faq" element={<Layout><FAQ /></Layout>} />
+            <Route path="/blog" element={<Layout><Blog /></Layout>} />
+            <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
+            
 
             {/* Public routes wrapped with Layout */}
             <Route 

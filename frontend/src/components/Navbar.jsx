@@ -16,7 +16,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Logo from "../assets/logo.png";
 
 const Navbar = () => {
-  const appPages = ["WelcomePage", "Login"];
+  const appPages = ["Home", "Login"];
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activePage, setActivePage] = useState("");
 
@@ -25,8 +25,8 @@ const Navbar = () => {
   let lastScrollY = 0;
 
   useEffect(() => {
-    const currentPath = window.location.pathname.replace("/", "");
-    setActivePage(currentPath || "WelcomePage");
+    const currentPath = window.location.pathname.replace("/home", "");
+    setActivePage(currentPath || "Home");
   }, []);
 
   // Scroll effect to hide/show navbar

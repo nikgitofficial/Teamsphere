@@ -140,6 +140,16 @@ const Login = () => {
             {loading ? <CircularProgress size={24} color="inherit" /> : "Login"}
           </Button>
         </Box>
+        <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+  <Link to="/forgot-password" style={{ textDecoration: "none", color: "#1976d2" }}>
+    Forgot your password?
+  </Link>
+</Typography>
+<Typography variant="body2" align="center" sx={{ mt: 1 }}>
+  <Link to="/about" style={{ textDecoration: "none", color: "#1976d2" }}>
+    About Us
+  </Link>
+</Typography>
 
         <Typography variant="body2" align="center" sx={{ mt: 3 }}>
           Don’t have an account?{" "}

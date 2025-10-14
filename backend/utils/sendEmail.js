@@ -11,7 +11,7 @@ const sendEmail = async (to, subject, otp) => {
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
-      <h2 style="color: #2e7d32;">🔐 Answerly Password Reset</h2>
+      <h2 style="color: #2e7d32;">🔐 TeamSphere Password Reset</h2>
       <p>Hello,</p>
       <p>You recently requested to reset your password. Please use the OTP below to proceed:</p>
       <div style="margin: 20px 0; text-align: center;">

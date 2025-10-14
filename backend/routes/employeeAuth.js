@@ -2,7 +2,7 @@ import express from "express";
 import {
   employeeLogin,
   getEmployeeData,
-} from "../controllers/employeeAuthController.js";
+} from "../controllers/employeeauthController.js";
 
 const router = express.Router();
 

@@ -194,7 +194,7 @@ const Community = () => (
 
 
 
-          <Typography fontWeight={600}>Sarah Nguyen</Typography>
+          <Typography fontWeight={600}>Tita Meng2x</Typography>
           <Typography variant="body2" color="rgba(255,255,255,0.6)">
             Product Designer, Singapore
           </Typography>

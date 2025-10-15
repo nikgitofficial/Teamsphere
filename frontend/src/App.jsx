@@ -19,6 +19,10 @@ import Settings  from "./pages/userpage/Settings.jsx";
 import PayrollOverview from "./pages/userpage/PayrollOverview";
 import AttendanceRemarks from "./pages/userpage/AttendanceRemarks.jsx";
 
+// Admin pages
+import Adminhome from "./pages/admin/Adminhome.jsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+
 // Public pages
 import About from "./pages/public/About.jsx";
 import Privacy from "./pages/public/Privacy.jsx";
@@ -37,12 +41,16 @@ import Blog from "./pages/public/Blog.jsx";
 import Analytics from "./pages/public/Analytics.jsx";
 
 
+
+
 // Employee pages
 import Index from "./pages/employee/Index.jsx";
 import EmployeeLogin from "./pages/employee/EmployeeLogin.jsx";
 import EmployeeDataPage from "./pages/employee/EmployeeDataPage.jsx";
 import EmployeeAttendancePage from "./pages/employee/EmployeeAttendancePage.jsx";
 import EmployeePayslipPage from "./pages/employee/EmployeePayslipPage.jsx";
+
+
 
 const ProtectedRoute = ({ user, children }) => {
   if (!user) return <Navigate to="/login" replace />;
@@ -54,6 +62,7 @@ const AdminRoute = ({ user, children }) => {
   if (user.role !== "admin") return <Navigate to="/dashboard/home" replace />;
   return children;
 };
+
 
 const EmployeeProtectedRoute = ({ children }) => {
   const employee = localStorage.getItem("employee");
@@ -69,6 +78,15 @@ const App = () => {
       <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <BrowserRouter>
           <Routes>
+
+            {/*admin routes*/}
+              <Route path="/admin" element={<AdminRoute user={user}><AdminDashboard /></AdminRoute>}>
+            <Route path="home" element={<Adminhome />} />
+  
+            </Route>
+
+
+
             {/* Default route — show About first */}
             <Route path="/" element={<Navigate to="/about" replace />} />
             <Route path="/privacy" element={<Layout><Privacy /></Layout>} />

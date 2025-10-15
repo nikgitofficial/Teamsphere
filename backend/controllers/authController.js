@@ -4,16 +4,17 @@ import User from "../models/User.js";
 import { createAccessToken, createRefreshToken } from "../utils/tokenUtils.js";
 
 export const register = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, role } = req.body;
   const existingUser = await User.findOne({ email });
   if (existingUser) return res.status(400).json({ msg: "User already exists" });
 
   const hashed = await bcrypt.hash(password, 10);
-  const newUser = new User({ username, email, password: hashed });
+  const newUser = new User({ username, email, password: hashed, role: role || "user" });
   await newUser.save();
 
   res.status(201).json({ msg: "Registered successfully" });
 };
+
 
 export const login = async (req, res) => {
   const { email, password } = req.body;

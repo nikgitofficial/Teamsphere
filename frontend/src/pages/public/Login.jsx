@@ -17,29 +17,31 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import { AuthContext } from "../../context/AuthContext";
+import logo from "../../assets/logo.png"; // <-- add your logo here
 
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [snack, setSnack] = useState({
     open: false,
     message: "",
     severity: "success",
   });
 
-  const [showPassword, setShowPassword] = useState(false);
-
   const navigate = useNavigate();
   const { user, setUser } = useContext(AuthContext);
 
   useEffect(() => {
-    if (user) navigate("/dashboard/home");
+    if (user) {
+      const path = user.role === "admin" ? "/admin" : "/dashboard/home";
+      navigate(path);
+    }
   }, [user, navigate]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
@@ -68,34 +70,44 @@ const Login = () => {
         severity: "success",
       });
 
-      setTimeout(() => navigate("/dashboard/home"), 1500);
+      // ✅ Role-based redirect
+      const path = me.data.role === "admin" ? "/admin" : "/dashboard/home";
+      setTimeout(() => navigate(path), 1200);
     } catch (err) {
-      const msg = err.response?.data?.msg || "❌ Login failed. Try again.";
+      const msg = err.response?.data?.msg || "❌ Login failed. Please try again.";
       setError(msg);
+      setSnack({ open: true, message: msg, severity: "error" });
 
-      setSnack({
-        open: true,
-        message: msg,
-        severity: "error",
-      });
-
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
+      localStorage.clear();
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container maxWidth="sm">
-      <Paper elevation={6} sx={{ p: 4, mt: 10, borderRadius: 4 }}>
-        <Typography variant="h4" align="center" gutterBottom fontWeight={600}>
-          Welcome Back
+    <Container maxWidth="sm" sx={{ display: "flex", justifyContent: "center" }}>
+      <Paper
+        elevation={6}
+        sx={{
+          p: 5,
+          mt: 10,
+          width: "100%",
+          borderRadius: 4,
+          backdropFilter: "blur(6px)",
+        }}
+      >
+        {/* Logo */}
+        <Box display="flex" justifyContent="center" mb={3}>
+          <img src={logo} alt="TeamSphere Logo" style={{ width: 120, height: "auto" }} />
+        </Box>
+
+        <Typography variant="h4" align="center" fontWeight={700} gutterBottom>
+          Welcome Back 👋
         </Typography>
-        <Typography variant="subtitle1" align="center" gutterBottom>
-          Login to continue
+        <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom>
+          Sign in to continue
         </Typography>
+
         <Divider sx={{ mb: 3 }} />
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -110,7 +122,9 @@ const Login = () => {
             fullWidth
             required
             margin="normal"
+            autoComplete="email"
           />
+
           <TextField
             name="password"
             label="Password"
@@ -120,6 +134,7 @@ const Login = () => {
             fullWidth
             required
             margin="normal"
+            autoComplete="current-password"
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -130,35 +145,37 @@ const Login = () => {
               ),
             }}
           />
+
           <Button
             type="submit"
             variant="contained"
             fullWidth
-            sx={{ mt: 2, py: 1.5 }}
+            sx={{ mt: 3, py: 1.4, fontWeight: 600 }}
             disabled={loading}
           >
-            {loading ? <CircularProgress size={24} color="inherit" /> : "Login"}
+            {loading ? <CircularProgress size={26} color="inherit" /> : "Login"}
           </Button>
         </Box>
+
         <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-  <Link to="/forgot-password" style={{ textDecoration: "none", color: "#1976d2" }}>
-    Forgot your password?
-  </Link>
-</Typography>
-<Typography variant="body2" align="center" sx={{ mt: 1 }}>
-  <Link to="/about" style={{ textDecoration: "none", color: "#1976d2" }}>
-    About Us
-  </Link>
-</Typography>
+          <Link to="/forgot-password" style={{ textDecoration: "none", color: "#1976d2" }}>
+            Forgot your password?
+          </Link>
+        </Typography>
+
+        <Typography variant="body2" align="center" sx={{ mt: 1 }}>
+          <Link to="/" style={{ textDecoration: "none", color: "#1976d2" }}>
+            Home
+          </Link>
+        </Typography>
 
         <Typography variant="body2" align="center" sx={{ mt: 3 }}>
           Don’t have an account?{" "}
-          <Link to="/register" style={{ textDecoration: "none", color: "#1976d2" }}>
+          <Link to="/register" style={{ textDecoration: "none", color: "#1976d2", fontWeight: 500 }}>
             Register here
           </Link>
         </Typography>
 
-        {/* ✅ Employee Login link */}
         <Typography variant="body2" align="center" sx={{ mt: 1 }}>
           Are you an employee?{" "}
           <Link to="/employee-login" style={{ textDecoration: "none", color: "#1976d2", fontWeight: 500 }}>
@@ -170,7 +187,7 @@ const Login = () => {
       <Snackbar
         open={snack.open}
         autoHideDuration={3000}
-        onClose={() => setSnack({ ...snack, open: false })}
+        onClose={() => setSnack((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert severity={snack.severity} variant="filled">

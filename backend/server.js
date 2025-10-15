@@ -13,6 +13,9 @@ import attendanceRemarkRoutes from "./routes/attendanceRemarkRoutes.js";
 
 import employeeAuthRoutes from "./routes/employeeAuth.js";
 
+//admin routes 
+import adminRoutes from "./routes/adminRoutes.js";
+
 
 
 
@@ -56,6 +59,10 @@ app.use('/api/profile', profileRoutes);
 app.use("/api/payroll", payrollRoutes);
 app.use("/api/attendance-remarks", attendanceRemarkRoutes);
 app.use("/api/employee-auth", employeeAuthRoutes);
+
+
+// ✅ Admin routes
+app.use("/api/admin", adminRoutes);
 
 
 

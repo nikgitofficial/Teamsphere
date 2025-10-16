@@ -1,21 +1,32 @@
 import express from "express";
 import authenticate from "../middleware/authMiddleware.js";
 import requireAdmin from "../middleware/adminMiddleware.js";
-import User from "../models/User.js";
+import {
+  getAllUsers,
+  promoteUser,
+  getAllRatings,
+  deleteRating,
+  getTotalEmployees,
+  getAllEmployees,
+} from "../controllers/adminController.js";
 
 const router = express.Router();
 
-// GET all users (admin only)
-router.get("/users", authenticate, requireAdmin, async (req, res) => {
-  const users = await User.find().select("-password");
-  res.json(users);
-});
+router.use(authenticate, requireAdmin);
 
-// Promote user to admin
-router.patch("/promote/:id", authenticate, requireAdmin, async (req, res) => {
-  const { id } = req.params;
-  const updated = await User.findByIdAndUpdate(id, { role: "admin" }, { new: true }).select("-password");
-  res.json({ msg: "User promoted to admin", user: updated });
-});
+// User routes
+router.get("/users", getAllUsers);
+router.patch("/promote/:id", promoteUser);
+
+// Rating routes
+router.get("/ratings", getAllRatings);
+router.delete("/ratings/:id", deleteRating);
+
+// Employee count route
+router.get("/employees/count", getTotalEmployees);
+
+
+// Add after employee count route
+router.get("/employees", getAllEmployees);
 
 export default router;

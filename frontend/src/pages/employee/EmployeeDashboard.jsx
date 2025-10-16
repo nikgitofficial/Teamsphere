@@ -97,8 +97,8 @@ const EmployeeDashboard = () => {
   const drawerLinks = [
     { label: "Home", icon: <Home />, path: "/employee-dashboard/home", color: "orange" },
     { label: "Employee Details", icon: <People />, path: "/employee-dashboard/employees", color: "#4caf50" },
+    { label: "Announcements", icon: <Comment />, path: "/employee-dashboard/announcements", color: "#f4b400" },
     { label: "Attendance", icon: <AccessTime />, path: "/employee-dashboard/attendance", color: "#AFEEEE" },
-    { label: "Remarks", icon: <Comment />, path: "/employee-dashboard/remarks", color: "#f4b400" },
     { label: "Payroll", icon: <MonetizationOn />, path: "/employee-dashboard/payroll", color: "#4caf50" },
     { label: "Settings", icon: <Settings />, path: "/employee-dashboard/settings", color: "white" },
   ];

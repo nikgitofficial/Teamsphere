@@ -18,13 +18,18 @@ import Profile from "./pages/userpage/Profile.jsx";
 import Settings  from "./pages/userpage/Settings.jsx";
 import PayrollOverview from "./pages/userpage/PayrollOverview";
 import AttendanceRemarks from "./pages/userpage/AttendanceRemarks.jsx";
+import Announcements from "./pages/userpage/Announcements";
 
-// **New import for Remarks/Announcements**
-import Remarks from "./pages/userpage/Remarks.jsx";
+
+//arrow scroll up or down 
+import ScrollArrow from "./components/ui/ScrollArrow";
 
 // Admin pages
 import Adminhome from "./pages/admin/Adminhome.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import AdminAnnouncements from "./pages/admin/AdminAnnouncements.jsx";
+import AdminRatings from "./pages/admin/AdminRatings.jsx";
+import AdminSubscriptions from "./pages/admin/AdminSubscriptions.jsx";
 
 // Public pages
 import About from "./pages/public/About.jsx";
@@ -45,6 +50,7 @@ import Analytics from "./pages/public/Analytics.jsx";
 
 // Employee pages
 import Index from "./pages/employee/Index.jsx";
+import EmployeeAnnouncements from "./pages/employee/EmployeeAnnouncements.jsx";
 import EmployeeLogin from "./pages/employee/EmployeeLogin.jsx";
 import EmployeeDataPage from "./pages/employee/EmployeeDataPage.jsx";
 import EmployeeAttendancePage from "./pages/employee/EmployeeAttendancePage.jsx";
@@ -78,9 +84,13 @@ const App = () => {
 
             {/* admin routes */}
             <Route path="/admin" element={<AdminRoute user={user}><AdminDashboard /></AdminRoute>}>
+              <Route index element={<Navigate to="home" replace />} />
               <Route path="home" element={<Adminhome />} />
-              {/* Admin create remarks */}
-              <Route path="create-remarks" element={<Remarks />} />
+              <Route path="announcements" element={<AdminAnnouncements />} />
+              <Route path="ratings" element={<AdminRatings />} />
+              <Route path="subscriptions" element={<AdminSubscriptions />} />
+              
+              
             </Route>
 
             {/* Default route — show About first */}
@@ -134,10 +144,11 @@ const App = () => {
               element={<EmployeeProtectedRoute><EmployeeDashboard /></EmployeeProtectedRoute>}
             >
               <Route path="home" element={<Index />} />
+              <Route path="announcements" element={<EmployeeAnnouncements />} />
               <Route path="employees" element={<EmployeeDataPage />} />
               <Route path="attendance" element={<EmployeeAttendancePage />} />
               {/* Employee view remarks */}
-              <Route path="remarks" element={<Remarks />} />
+              
               <Route path="payroll" element={<EmployeePayslipPage />} />
               <Route path="settings" element={<Settings />} />
             </Route>
@@ -150,7 +161,8 @@ const App = () => {
                 <Route path="home" element={<Home />} />
                 <Route path="employees" element={<EmployeePage />} />
                 {/* User view remarks */}
-                <Route path="attendance-remarks" element={<Remarks />} />
+                <Route path="attendance-remarks" element={<AttendanceRemarks />} />
+                <Route path="announcement" element={<Announcements />} />
                 <Route path="attendance-overview" element={<AttendanceOverview />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="settings" element={<Settings />} />
@@ -164,6 +176,7 @@ const App = () => {
             <Route path="*" element={<Navigate to="/about" replace />} />
           </Routes>
         </BrowserRouter>
+         <ScrollArrow />
       </Box>
     </LocalizationProvider>
   );

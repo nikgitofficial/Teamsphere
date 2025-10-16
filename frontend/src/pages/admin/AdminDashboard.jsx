@@ -25,6 +25,7 @@ import {
   Brightness4,
   Brightness7,
   Menu,
+  Star as StarIcon,
 } from "@mui/icons-material";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -64,6 +65,9 @@ const AdminDashboard = () => {
 
   const drawerLinks = [
     { label: "Home", icon: <Home />, path: "/admin/home", color: "orange" },
+    { label: "Announcements", icon: <Home />, path: "/admin/announcements", color: "orange" },
+    { label: "Ratings", icon: <StarIcon />, path: "/admin/ratings", color: "orange" },
+    { label: "Subscriptions", icon: <StarIcon />, path: "/admin/subscriptions", color: "orange" },
     // add other links as needed
   ];
 

@@ -21,6 +21,8 @@ const Layout = ({ children }) => { // accept children
     "/login",
     "/forgot-password",
     "/admin",
+    "/dashboard/announcement",
+    "/register",
   ];
 
   const hiddenNavbarRoutes = [
@@ -35,6 +37,8 @@ const Layout = ({ children }) => { // accept children
     "/login",
     "/forgot-password",
     "/admin",
+    "/dashboard/announcement",
+    "/register",
   ];
 
   const shouldHideFooter = hiddenFooterRoutes.includes(location.pathname);

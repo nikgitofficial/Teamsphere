@@ -244,14 +244,14 @@ const Dashboard = () => {
 
 <ListItemButton
   component={Link}
-  to="/dashboard/create-announcement"
-  selected={location.pathname === "/dashboard/create-announcement"}
+  to="/dashboard/announcement"
+  selected={location.pathname === "/dashboard/announcement"}
 >
   <ListItemIcon>
     <Campaign sx={{ color: "#f4b400" }} /> {/* Yellow-gold for announcements */}
   </ListItemIcon>
   <ListItemText 
-    primary="Create Announcement" 
+    primary="Announcement" 
     sx={{ color: "white", fontWeight: "bold" }} 
   />
 </ListItemButton>

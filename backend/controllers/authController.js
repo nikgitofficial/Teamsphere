@@ -24,7 +24,7 @@ export const login = async (req, res) => {
   const match = await bcrypt.compare(password, user.password);
   if (!match) return res.status(400).json({ msg: "Invalid credentials" });
 
-  const payload = { id: user._id, username: user.username };
+  const payload = { id: user._id, username: user.username, role: user.role };
   const accessToken = createAccessToken(payload);
   const refreshToken = createRefreshToken(payload);
 
@@ -47,7 +47,7 @@ export const refresh = (req, res) => {
       return res.sendStatus(403);
     }
 
-    const newAccessToken = createAccessToken({ id: user.id, username: user.username });
+    const newAccessToken = createAccessToken({ id: user.id, username: user.username, role: user.role });
     console.log("✅ Refresh successful");
     res.json({ accessToken: newAccessToken });
   });

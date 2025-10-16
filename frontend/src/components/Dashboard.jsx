@@ -37,6 +37,7 @@ import {
   People,
   AccessTime,
   Comment,
+  Campaign,
 } from "@mui/icons-material";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -240,6 +241,21 @@ const Dashboard = () => {
     sx={{ color: "white", fontWeight: "bold" }} 
   />
 </ListItemButton>
+
+<ListItemButton
+  component={Link}
+  to="/dashboard/create-announcement"
+  selected={location.pathname === "/dashboard/create-announcement"}
+>
+  <ListItemIcon>
+    <Campaign sx={{ color: "#f4b400" }} /> {/* Yellow-gold for announcements */}
+  </ListItemIcon>
+  <ListItemText 
+    primary="Create Announcement" 
+    sx={{ color: "white", fontWeight: "bold" }} 
+  />
+</ListItemButton>
+
 
 
           <ListItemButton

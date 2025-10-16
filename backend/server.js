@@ -10,8 +10,11 @@ import attendanceRoutes from "./routes/attendanceRoutes.js";
 import profileRoutes from './routes/profileRoutes.js';
 import payrollRoutes from "./routes/payrollRoutes.js";
 import attendanceRemarkRoutes from "./routes/attendanceRemarkRoutes.js";
+import remarkRoutes from "./routes/remarkRoutes.js"
 
+// employee auth routes
 import employeeAuthRoutes from "./routes/employeeAuth.js";
+
 
 //admin routes 
 import adminRoutes from "./routes/adminRoutes.js";
@@ -59,6 +62,7 @@ app.use('/api/profile', profileRoutes);
 app.use("/api/payroll", payrollRoutes);
 app.use("/api/attendance-remarks", attendanceRemarkRoutes);
 app.use("/api/employee-auth", employeeAuthRoutes);
+app.use("/api/remarks", remarkRoutes);
 
 
 // ✅ Admin routes

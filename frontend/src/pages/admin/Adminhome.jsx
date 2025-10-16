@@ -1,26 +1,29 @@
 import { useEffect, useState, useContext } from "react";
 import axios from "../../api/axios";
-import { Box, Typography, List, ListItem, ListItemText, Button } from "@mui/material";
+import { Box, Typography, List, ListItem, ListItemText, Button, CircularProgress } from "@mui/material";
 import { AuthContext } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const Adminhome = () => {
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get("/admin/users"); // Axios instance already adds token
+        const res = await axios.get("/admin/users"); // Axios instance adds token
         setUsers(res.data);
       } catch (err) {
         console.error("Failed to fetch users:", err);
-        if (err.response?.status === 401) {
-          // Token expired or unauthorized
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          // Unauthorized or forbidden
           logout();
           navigate("/login");
         }
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -31,6 +34,14 @@ const Adminhome = () => {
     logout();
     navigate("/login");
   };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -43,12 +54,7 @@ const Adminhome = () => {
         mt: 2,
       }}
     >
-      <Box display="flex" justifyContent="space-between" width="100%" maxWidth={600} mb={3}>
-        <Typography variant="h4">Admin Dashboard</Typography>
-        <Button variant="contained" color="error" onClick={handleLogout}>
-          Logout
-        </Button>
-      </Box>
+      
 
       <Typography variant="subtitle1" mb={3}>
         Total Users: {users.length}

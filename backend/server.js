@@ -12,6 +12,8 @@ import payrollRoutes from "./routes/payrollRoutes.js";
 import attendanceRemarkRoutes from "./routes/attendanceRemarkRoutes.js";
 import announcementRoutes from "./routes/announcementRoutes.js";
 
+import overtimeRoutes from "./routes/overtimeRoutes.js";
+
 
 // employee auth routes
 import employeeAuthRoutes from "./routes/employeeAuth.js";
@@ -69,6 +71,7 @@ app.use("/api/employee-auth", employeeAuthRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api", ratingRoutes);
 app.use("/api/subscription", subscriptionRoutes);
+app.use("/api/overtime", overtimeRoutes);
 
 
 

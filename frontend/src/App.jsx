@@ -19,6 +19,8 @@ import Settings  from "./pages/userpage/Settings.jsx";
 import PayrollOverview from "./pages/userpage/PayrollOverview";
 import AttendanceRemarks from "./pages/userpage/AttendanceRemarks.jsx";
 import Announcements from "./pages/userpage/Announcements";
+import Overtimes from  "./pages/userpage/Overtimes.jsx";
+
 
 
 //arrow scroll up or down 
@@ -51,10 +53,12 @@ import Analytics from "./pages/public/Analytics.jsx";
 // Employee pages
 import Index from "./pages/employee/Index.jsx";
 import EmployeeAnnouncements from "./pages/employee/EmployeeAnnouncements.jsx";
+import ApplyOvetime from  "./pages/employee/ApplyOvertime.jsx";
 import EmployeeLogin from "./pages/employee/EmployeeLogin.jsx";
 import EmployeeDataPage from "./pages/employee/EmployeeDataPage.jsx";
 import EmployeeAttendancePage from "./pages/employee/EmployeeAttendancePage.jsx";
 import EmployeePayslipPage from "./pages/employee/EmployeePayslipPage.jsx";
+
 
 const ProtectedRoute = ({ user, children }) => {
   if (!user) return <Navigate to="/login" replace />;
@@ -145,6 +149,7 @@ const App = () => {
             >
               <Route path="home" element={<Index />} />
               <Route path="announcements" element={<EmployeeAnnouncements />} />
+              <Route path="overtime" element={<ApplyOvetime />} />
               <Route path="employees" element={<EmployeeDataPage />} />
               <Route path="attendance" element={<EmployeeAttendancePage />} />
               {/* Employee view remarks */}
@@ -160,6 +165,7 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />}>
                 <Route path="home" element={<Home />} />
                 <Route path="employees" element={<EmployeePage />} />
+                <Route path="overtimes" element={<Overtimes />} />
                 {/* User view remarks */}
                 <Route path="attendance-remarks" element={<AttendanceRemarks />} />
                 <Route path="announcement" element={<Announcements />} />

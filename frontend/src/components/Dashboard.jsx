@@ -226,6 +226,17 @@ const Dashboard = () => {
     <People sx={{ color: "green" }} />
   </ListItemIcon>
   <ListItemText primary="Employees" sx={{ color: "white" }} />
+
+</ListItemButton>
+        <ListItemButton
+  component={Link}
+  to="/dashboard/overtimes"
+  selected={location.pathname === "/dashboard/overtimes"}
+>
+  <ListItemIcon>
+    <People sx={{ color: "green" }} />
+  </ListItemIcon>
+  <ListItemText primary="Overtimes" sx={{ color: "white" }} />
 </ListItemButton>
 
 <ListItemButton

@@ -20,11 +20,7 @@ import employeeAxios from "../../api/employeeAxios";
 const EmployeeLogin = () => {
   const [form, setForm] = useState({ email: "", pincode: "" });
   const [loading, setLoading] = useState(false);
-  const [snack, setSnack] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+  const [snack, setSnack] = useState({ open: false, message: "", severity: "success" });
   const [showPincode, setShowPincode] = useState(false);
 
   const navigate = useNavigate();
@@ -44,7 +40,11 @@ const EmployeeLogin = () => {
 
     try {
       const res = await employeeAxios.post("/employee-auth/login", form);
-      localStorage.setItem("employee", JSON.stringify(res.data));
+      const employee = res.data;
+
+      // Store employee and employeeId separately
+      localStorage.setItem("employee", JSON.stringify(employee));
+      localStorage.setItem("employeeId", employee._id); // <-- fixes 401 for future requests
 
       setSnack({
         open: true,
@@ -120,7 +120,6 @@ const EmployeeLogin = () => {
           </Button>
         </Box>
 
-        {/* Back to Main Login */}
         <Typography variant="body2" align="center" sx={{ mt: 3 }}>
           Back to{" "}
           <Link

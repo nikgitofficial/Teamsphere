@@ -129,7 +129,7 @@ const Privacy = () => {
             <Typography paragraph>
               For any privacy-related questions or data requests, contact us at{" "}
               <Box component="span" sx={{ color: "#f9a825", fontWeight: 600 }}>
-                nickforjobacc2gmail.com
+                nickforjobacc@gmail.com
               </Box>.
             </Typography>
 

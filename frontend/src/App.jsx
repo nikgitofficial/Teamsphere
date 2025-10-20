@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react"; // ✅ added useState & useEffect
 import { Box } from "@mui/material";
 import { AuthContext } from "./context/AuthContext";
 import Layout from "./layouts/Layout"; 
@@ -48,6 +48,9 @@ import FAQ from "./pages/public/FAQ.jsx";
 import Blog from "./pages/public/Blog.jsx";
 import Analytics from "./pages/public/Analytics.jsx";
 
+// ✅ Welcome Modal component
+import WelcomeModal from "./components/ui/WelcomeModal"; 
+
 // Employee pages
 import Index from "./pages/employee/Index.jsx";
 import EmployeeAnnouncements from "./pages/employee/EmployeeAnnouncements.jsx";
@@ -85,9 +88,26 @@ const EmployeeProtectedRoute = ({ children }) => {
 const App = () => {
   const { user } = useContext(AuthContext);
 
+  // ✅ Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+
+ useEffect(() => {
+  const hasSeenModal = localStorage.getItem("hasSeenWelcomeModal");
+  if (!hasSeenModal) {
+    setModalOpen(true);
+    localStorage.setItem("hasSeenWelcomeModal", "true"); // saves permanently
+  }
+}, []);
+
+const handleCloseModal = () => setModalOpen(false);
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        
+        {/* ✅ Welcome modal */}
+        <WelcomeModal open={modalOpen} handleClose={handleCloseModal} />
+
         <BrowserRouter>
           <Routes>
 
@@ -103,7 +123,7 @@ const App = () => {
             {/* Default route — show About first */}
             <Route path="/" element={<Navigate to="/about" replace />} />
 
-            {/* ✅ Public routes now wrapped with PublicPage so ScrollArrow only appears here */}
+            {/* ✅ Public routes now wrapped with PublicPage */}
             <Route path="/privacy" element={<PublicPage><Privacy /></PublicPage>} />
             <Route path="/terms" element={<PublicPage><Terms /></PublicPage>} />
             <Route path="/cookiesettings" element={<PublicPage><CookieSettings /></PublicPage>} />

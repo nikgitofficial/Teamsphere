@@ -18,6 +18,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import { AuthContext } from "../../context/AuthContext";
 import logo from "../../assets/logo.png"; // <-- add your logo here
+import leftImage from "../../assets/login-left.jpg";    // <-- add your left side image here
 
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -70,14 +71,12 @@ const Login = () => {
         severity: "success",
       });
 
-      // ✅ Role-based redirect
       const path = me.data.role === "admin" ? "/admin" : "/dashboard/home";
       setTimeout(() => navigate(path), 1200);
     } catch (err) {
       const msg = err.response?.data?.msg || "❌ Login failed. Please try again.";
       setError(msg);
       setSnack({ open: true, message: msg, severity: "error" });
-
       localStorage.clear();
     } finally {
       setLoading(false);
@@ -85,103 +84,117 @@ const Login = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ display: "flex", justifyContent: "center" }}>
+    <Container maxWidth="lg" sx={{ mt: 8 }}>
       <Paper
         elevation={6}
         sx={{
-          p: 5,
-          mt: 10,
-          width: "100%",
+          display: "flex",
           borderRadius: 4,
-          backdropFilter: "blur(6px)",
+          overflow: "hidden",
+          minHeight: 500,
         }}
       >
-        {/* Logo */}
-        <Box display="flex" justifyContent="center" mb={3}>
-          <img src={logo} alt="TeamSphere Logo" style={{ width: 120, height: "auto" }} />
+        {/* Left side image */}
+            <Box
+  sx={{
+    flex: 1,
+    backgroundImage: `url(${leftImage})`, // now using your new image
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    transform: "perspective(500px) rotateY(-1deg)", // keeps the 3D tilt
+  }}
+/>
+
+
+        {/* Right side login form */}
+        <Box sx={{ flex: 1, p: 6, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          {/* Logo */}
+          <Box display="flex" justifyContent="center" mb={3}>
+            <img src={logo} alt="TeamSphere Logo" style={{ width: 120, height: "auto" }} />
+          </Box>
+
+          <Typography variant="h4" align="center" fontWeight={700} gutterBottom>
+            Welcome Back 👋
+          </Typography>
+          <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom>
+            Sign in to continue
+          </Typography>
+
+          <Divider sx={{ mb: 3 }} />
+
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+          <Box component="form" onSubmit={handleSubmit} noValidate>
+            <TextField
+              name="email"
+              label="Email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              fullWidth
+              required
+              margin="normal"
+              autoComplete="email"
+            />
+
+            <TextField
+              name="password"
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              value={form.password}
+              onChange={handleChange}
+              fullWidth
+              required
+              margin="normal"
+              autoComplete="current-password"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowPassword((prev) => !prev)} edge="end">
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              sx={{ mt: 3, py: 1.4, fontWeight: 600 }}
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={26} color="inherit" /> : "Login"}
+            </Button>
+          </Box>
+
+          <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+            <Link to="/forgot-password" style={{ textDecoration: "none", color: "#1976d2" }}>
+              Forgot your password?
+            </Link>
+          </Typography>
+
+          <Typography variant="body2" align="center" sx={{ mt: 1 }}>
+            <Link to="/" style={{ textDecoration: "none", color: "#1976d2" }}>
+              Home
+            </Link>
+          </Typography>
+
+          <Typography variant="body2" align="center" sx={{ mt: 3 }}>
+            Don’t have an account?{" "}
+            <Link to="/register" style={{ textDecoration: "none", color: "#1976d2", fontWeight: 500 }}>
+              Register here
+            </Link>
+          </Typography>
+
+          <Typography variant="body2" align="center" sx={{ mt: 1 }}>
+            Are you an employee?{" "}
+            <Link to="/employee-login" style={{ textDecoration: "none", color: "#1976d2", fontWeight: 500 }}>
+              Employee Login
+            </Link>
+          </Typography>
         </Box>
-
-        <Typography variant="h4" align="center" fontWeight={700} gutterBottom>
-          Welcome Back 👋
-        </Typography>
-        <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom>
-          Sign in to continue
-        </Typography>
-
-        <Divider sx={{ mb: 3 }} />
-
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-        <Box component="form" onSubmit={handleSubmit} noValidate>
-          <TextField
-            name="email"
-            label="Email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            fullWidth
-            required
-            margin="normal"
-            autoComplete="email"
-          />
-
-          <TextField
-            name="password"
-            label="Password"
-            type={showPassword ? "text" : "password"}
-            value={form.password}
-            onChange={handleChange}
-            fullWidth
-            required
-            margin="normal"
-            autoComplete="current-password"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword((prev) => !prev)} edge="end">
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            sx={{ mt: 3, py: 1.4, fontWeight: 600 }}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={26} color="inherit" /> : "Login"}
-          </Button>
-        </Box>
-
-        <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-          <Link to="/forgot-password" style={{ textDecoration: "none", color: "#1976d2" }}>
-            Forgot your password?
-          </Link>
-        </Typography>
-
-        <Typography variant="body2" align="center" sx={{ mt: 1 }}>
-          <Link to="/" style={{ textDecoration: "none", color: "#1976d2" }}>
-            Home
-          </Link>
-        </Typography>
-
-        <Typography variant="body2" align="center" sx={{ mt: 3 }}>
-          Don’t have an account?{" "}
-          <Link to="/register" style={{ textDecoration: "none", color: "#1976d2", fontWeight: 500 }}>
-            Register here
-          </Link>
-        </Typography>
-
-        <Typography variant="body2" align="center" sx={{ mt: 1 }}>
-          Are you an employee?{" "}
-          <Link to="/employee-login" style={{ textDecoration: "none", color: "#1976d2", fontWeight: 500 }}>
-            Employee Login
-          </Link>
-        </Typography>
       </Paper>
 
       <Snackbar

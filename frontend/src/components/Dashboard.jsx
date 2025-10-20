@@ -228,13 +228,14 @@ const Dashboard = () => {
   <ListItemText primary="Employees" sx={{ color: "white" }} />
 
 </ListItemButton>
-        <ListItemButton
+     
+<ListItemButton 
   component={Link}
   to="/dashboard/overtimes"
   selected={location.pathname === "/dashboard/overtimes"}
 >
   <ListItemIcon>
-    <People sx={{ color: "green" }} />
+    <AccessTime color="primary" />
   </ListItemIcon>
   <ListItemText primary="Overtimes" sx={{ color: "white" }} />
 </ListItemButton>

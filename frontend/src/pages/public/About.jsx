@@ -14,6 +14,10 @@ import {
   MonetizationOn,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import logo1 from "../../assets/logo1.png";
+import logo2 from "../../assets/logo2.png";
+import sample from "../../assets/sample.png";
+
 
 // ✅ Fade-up scroll animation
 const FadeUpOnScroll = ({ children, threshold = 0.2, delay = 0 }) => {
@@ -97,23 +101,19 @@ const About = () => {
           <Typography
             variant="h6"
             sx={{
-              color: "rgba(255,255,255,0.85)",
-              maxWidth: "700px",
-              mt: 1,
+              color: "rgba(255,255,255,0.9)",
+              maxWidth: "720px",
+              mt: 1.5,
               fontWeight: 400,
-              lineHeight: 1.7,
+              lineHeight: 1.8,
             }}
           >
-            TeamSphere simplifies HR management with automation,
-            analytics, and transparency — empowering your team to focus
-            on growth, not admin work.
+            TeamSphere streamlines HR operations through smart automation,
+            powerful analytics, and full transparency — enabling your team to
+            focus on growth, innovation, and what truly matters.
           </Typography>
 
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            mt={4}
-          >
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mt={4}>
             <Button
               variant="contained"
               onClick={() => navigate("/login")}
@@ -170,9 +170,7 @@ const About = () => {
               desc: "Monitor attendance, overbreaks, and leaves automatically with real-time analytics.",
             },
             {
-              icon: (
-                <MonetizationOn sx={{ fontSize: 60, color: "#f9a825" }} />
-              ),
+              icon: <MonetizationOn sx={{ fontSize: 60, color: "#f9a825" }} />,
               title: "Automated Payroll",
               desc: "Generate payroll instantly based on attendance and leave data with 100% accuracy.",
             },
@@ -195,24 +193,84 @@ const About = () => {
               }}
             >
               {feature.icon}
-              <Typography
-                variant="h6"
-                fontWeight={700}
-                mt={2}
-                mb={1}
-              >
+              <Typography variant="h6" fontWeight={700} mt={2} mb={1}>
                 {feature.title}
               </Typography>
-              <Typography
-                variant="body1"
-                sx={{ opacity: 0.9, lineHeight: 1.6 }}
-              >
+              <Typography variant="body1" sx={{ opacity: 0.9, lineHeight: 1.6 }}>
                 {feature.desc}
               </Typography>
             </Paper>
           ))}
         </Stack>
       </FadeUpOnScroll>
+
+      {/* ✅ Marquee with Typography */}
+<Box
+  sx={{
+    width: "100%",
+    mt: 10,
+    overflow: "hidden",
+    position: "relative",
+    display: "flex",
+    flexDirection: "column", // stack title, marquee, subtitle
+    alignItems: "center",
+    maskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+    WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+  }}
+>
+  {/* Title above marquee */}
+  <Typography
+    variant="h5"
+    fontWeight={700}
+    sx={{ mb: 3, color: "#fff", textAlign: "center" }}
+  >
+    Our Trusted Partners
+  </Typography>
+
+  {/* Marquee */}
+  <Box
+    sx={{
+      display: "inline-flex",
+      gap: 6,
+      animation: "scrollLeft 25s linear infinite",
+      "@keyframes scrollLeft": {
+        from: { transform: "translateX(100%)" },
+        to: { transform: "translateX(-100%)" },
+      },
+    }}
+  >
+    {[sample, logo2, logo1, logo2, logo1, sample, logo1, logo2, logo2, logo1,sample].map(
+      (img, i) => (
+        <Box
+          key={i}
+          component="img"
+          src={img}
+          alt={`logo-${i}`}
+          sx={{
+            height: 60,
+            opacity: 0.9,
+            filter: "grayscale(100%) brightness(1.2)",
+            transition: "all 0.3s ease",
+            "&:hover": {
+              filter: "grayscale(0%) brightness(1.1)",
+              transform: "scale(1.8)",
+              zIndex: 10,
+            },
+          }}
+        />
+      )
+    )}
+  </Box>
+
+  {/* Subtitle below marquee */}
+  <Typography
+    variant="body1"
+    sx={{ mt: 3, color: "rgba(255,255,255,0.8)", textAlign: "center" }}
+  >
+    Powered by industry-leading companies
+  </Typography>
+</Box>
+
     </Box>
   );
 };

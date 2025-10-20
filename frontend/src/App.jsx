@@ -21,8 +21,6 @@ import AttendanceRemarks from "./pages/userpage/AttendanceRemarks.jsx";
 import Announcements from "./pages/userpage/Announcements";
 import Overtimes from  "./pages/userpage/Overtimes.jsx";
 
-
-
 //arrow scroll up or down 
 import ScrollArrow from "./components/ui/ScrollArrow";
 
@@ -59,6 +57,13 @@ import EmployeeDataPage from "./pages/employee/EmployeeDataPage.jsx";
 import EmployeeAttendancePage from "./pages/employee/EmployeeAttendancePage.jsx";
 import EmployeePayslipPage from "./pages/employee/EmployeePayslipPage.jsx";
 
+// ✅ Wrapper for public pages only
+const PublicPage = ({ children }) => (
+  <Layout>
+    {children}
+    <ScrollArrow />
+  </Layout>
+);
 
 const ProtectedRoute = ({ user, children }) => {
   if (!user) return <Navigate to="/login" replace />;
@@ -93,28 +98,29 @@ const App = () => {
               <Route path="announcements" element={<AdminAnnouncements />} />
               <Route path="ratings" element={<AdminRatings />} />
               <Route path="subscriptions" element={<AdminSubscriptions />} />
-              
-              
             </Route>
 
             {/* Default route — show About first */}
             <Route path="/" element={<Navigate to="/about" replace />} />
-            <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
-            <Route path="/terms" element={<Layout><Terms /></Layout>} />
-            <Route path="/cookiesettings" element={<Layout><CookieSettings /></Layout>} />
-            <Route path="/security" element={<Layout><Security /></Layout>} />
-            <Route path="/sitemap" element={<Layout><Sitemap /></Layout>} />
-            <Route path="/status" element={<Layout><Status /></Layout>} />
-            <Route path="/careers" element={<Layout><Careers /></Layout>} />
-            <Route path="/community" element={<Layout><Community /></Layout>} />
-            <Route path="/contact" element={<Layout><Contact /></Layout>} />
-            <Route path="/docs" element={<Layout><Docs /></Layout>} />
-            <Route path="/guides" element={<Layout><Guides /></Layout>} />
-            <Route path="/faq" element={<Layout><FAQ /></Layout>} />
-            <Route path="/blog" element={<Layout><Blog /></Layout>} />
-            <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
 
-            {/* Public routes wrapped with Layout */}
+            {/* ✅ Public routes now wrapped with PublicPage so ScrollArrow only appears here */}
+            <Route path="/privacy" element={<PublicPage><Privacy /></PublicPage>} />
+            <Route path="/terms" element={<PublicPage><Terms /></PublicPage>} />
+            <Route path="/cookiesettings" element={<PublicPage><CookieSettings /></PublicPage>} />
+            <Route path="/security" element={<PublicPage><Security /></PublicPage>} />
+            <Route path="/sitemap" element={<PublicPage><Sitemap /></PublicPage>} />
+            <Route path="/status" element={<PublicPage><Status /></PublicPage>} />
+            <Route path="/careers" element={<PublicPage><Careers /></PublicPage>} />
+            <Route path="/community" element={<PublicPage><Community /></PublicPage>} />
+            <Route path="/contact" element={<PublicPage><Contact /></PublicPage>} />
+            <Route path="/docs" element={<PublicPage><Docs /></PublicPage>} />
+            <Route path="/guides" element={<PublicPage><Guides /></PublicPage>} />
+            <Route path="/faq" element={<PublicPage><FAQ /></PublicPage>} />
+            <Route path="/blog" element={<PublicPage><Blog /></PublicPage>} />
+            <Route path="/analytics" element={<PublicPage><Analytics /></PublicPage>} />
+            <Route path="/about" element={<PublicPage><About /></PublicPage>} />
+
+            {/* Public routes (auth) */}
             <Route 
               path="/login" 
               element={
@@ -139,7 +145,6 @@ const App = () => {
                   : <Navigate to={user.role === "admin" ? "/admin" : "/dashboard/home"} />
               } 
             />
-            <Route path="/about" element={<Layout><About /></Layout>} />
 
             {/* Employee routes */}
             <Route path="/employee-login" element={<EmployeeLogin />} />
@@ -152,8 +157,6 @@ const App = () => {
               <Route path="overtime" element={<ApplyOvetime />} />
               <Route path="employees" element={<EmployeeDataPage />} />
               <Route path="attendance" element={<EmployeeAttendancePage />} />
-              {/* Employee view remarks */}
-              
               <Route path="payroll" element={<EmployeePayslipPage />} />
               <Route path="settings" element={<Settings />} />
             </Route>
@@ -166,7 +169,6 @@ const App = () => {
                 <Route path="home" element={<Home />} />
                 <Route path="employees" element={<EmployeePage />} />
                 <Route path="overtimes" element={<Overtimes />} />
-                {/* User view remarks */}
                 <Route path="attendance-remarks" element={<AttendanceRemarks />} />
                 <Route path="announcement" element={<Announcements />} />
                 <Route path="attendance-overview" element={<AttendanceOverview />} />
@@ -174,7 +176,6 @@ const App = () => {
                 <Route path="settings" element={<Settings />} />
                 <Route path="payroll" element={<PayrollOverview />} />
               </Route>
-
               <Route path="/attendance" element={<Attendance />} />
             </Route>
 
@@ -182,7 +183,6 @@ const App = () => {
             <Route path="*" element={<Navigate to="/about" replace />} />
           </Routes>
         </BrowserRouter>
-         <ScrollArrow />
       </Box>
     </LocalizationProvider>
   );

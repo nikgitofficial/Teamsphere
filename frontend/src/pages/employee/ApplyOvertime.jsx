@@ -120,6 +120,7 @@ const ApplyOvertime = () => {
               <TableCell align="center">Hours</TableCell>
               <TableCell align="center">Reason</TableCell>
               <TableCell align="center">Status</TableCell>
+              <TableCell>Action By</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -129,6 +130,32 @@ const ApplyOvertime = () => {
                 <TableCell align="center">{ot.hours}</TableCell>
                 <TableCell align="center">{ot.reason}</TableCell>
                 <TableCell align="center">{ot.status}</TableCell>
+           <TableCell>
+  {ot.actionBy && ot.actionBy.username ? (
+    <Box display="flex" alignItems="center" gap={1}>
+      <img
+        src={ot.actionBy.profilePic || "https://cdn-icons-png.flaticon.com/512/847/847969.png"}
+        alt="profile"
+        style={{
+          width: 30,
+          height: 30,
+          borderRadius: "50%",
+          objectFit: "cover",
+        }}
+      />
+      <Box>
+        <Typography variant="body2">{ot.actionBy.username}</Typography>
+        <Typography variant="caption" color="textSecondary">
+          {ot.actionBy.role || ""}
+        </Typography>
+      </Box>
+    </Box>
+  ) : (
+    "—"
+  )}
+</TableCell>
+
+ 
               </TableRow>
             ))}
           </TableBody>

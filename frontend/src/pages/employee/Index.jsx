@@ -270,7 +270,6 @@ const Index = () => {
       justifyContent: "space-between",
       fontWeight: 700,
       fontSize: "1.25rem",
-      color: "#333",
       background: "linear-gradient(to right, #ff9800, #ffc107)",
       color: "white",
       py: 2,

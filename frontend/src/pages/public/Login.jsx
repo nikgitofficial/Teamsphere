@@ -18,7 +18,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import { AuthContext } from "../../context/AuthContext";
 import logo from "../../assets/logo.png"; // <-- add your logo here
-import leftImage from "../../assets/login-left.jpg";    // <-- add your left side image here
+import leftImage from "../../assets/login-bg1.jpg";    // <-- add your left side image here
 
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -101,7 +101,7 @@ const Login = () => {
     backgroundImage: `url(${leftImage})`, // now using your new image
     backgroundSize: "cover",
     backgroundPosition: "center",
-    transform: "perspective(500px) rotateY(-1deg)", // keeps the 3D tilt
+    transform: "perspective(0px) rotateY(0deg)", // keeps the 3D tilt
   }}
 />
 

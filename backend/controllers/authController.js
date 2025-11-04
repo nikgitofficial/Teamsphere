@@ -4,67 +4,53 @@ import User from "../models/User.js";
 import { createAccessToken, createRefreshToken } from "../utils/tokenUtils.js";
 
 export const register = async (req, res) => {
-  try {
-    const { username, email, password, role } = req.body;
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ msg: "User already exists" });
+  const { username, email, password, role } = req.body;
+  const existingUser = await User.findOne({ email });
+  if (existingUser) return res.status(400).json({ msg: "User already exists" });
 
-    const hashed = await bcrypt.hash(password, 10);
-    const newUser = new User({ username, email, password: hashed, role: role || "user" });
-    await newUser.save();
+  const hashed = await bcrypt.hash(password, 10);
+  const newUser = new User({ username, email, password: hashed, role: role || "user" });
+  await newUser.save();
 
-    res.status(201).json({ msg: "Registered successfully" });
-  } catch (err) {
-    console.error("Register error:", err);
-    res.status(500).json({ msg: "Server error" });
-  }
+  res.status(201).json({ msg: "Registered successfully" });
 };
 
+
 export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ msg: "User not found" });
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) return res.status(400).json({ msg: "User not found" });
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ msg: "Invalid credentials" });
+  const match = await bcrypt.compare(password, user.password);
+  if (!match) return res.status(400).json({ msg: "Invalid credentials" });
 
-    const payload = { id: user._id, username: user.username, role: user.role };
-    const accessToken = createAccessToken(payload);
-    const refreshToken = createRefreshToken(payload);
+  const payload = { id: user._id, username: user.username, role: user.role };
+  const accessToken = createAccessToken(payload);
+  const refreshToken = createRefreshToken(payload);
 
-    // ✅ Send both tokens in response (not cookies)
-    res.json({ accessToken, refreshToken });
-  } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ msg: "Server error" });
-  }
+  // ✅ Send both tokens in response (not cookies)
+  res.json({ accessToken, refreshToken });
 };
 
 export const refresh = (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(" ")[1];
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1];
 
-    if (!token) {
-      console.log("❌ No refresh token in header");
-      return res.status(401).json({ msg: "No refresh token provided" });
+  if (!token) {
+    console.log("❌ No refresh token in header");
+    return res.status(401).json({ msg: "No refresh token provided" });
+  }
+
+  jwt.verify(token, process.env.JWT_REFRESH_SECRET, (err, user) => {
+    if (err) {
+      console.log("❌ Refresh token invalid:", err.message);
+      return res.sendStatus(403);
     }
 
-    jwt.verify(token, process.env.JWT_REFRESH_SECRET, (err, user) => {
-      if (err) {
-        console.log("❌ Refresh token invalid:", err.message);
-        return res.sendStatus(403);
-      }
-
-      const newAccessToken = createAccessToken({ id: user.id || user._id, username: user.username, role: user.role });
-      console.log("✅ Refresh successful");
-      res.json({ accessToken: newAccessToken });
-    });
-  } catch (err) {
-    console.error("Refresh error:", err);
-    res.status(500).json({ msg: "Server error" });
-  }
+    const newAccessToken = createAccessToken({ id: user.id, username: user.username, role: user.role });
+    console.log("✅ Refresh successful");
+    res.json({ accessToken: newAccessToken });
+  });
 };
 
 export const me = async (req, res) => {
@@ -80,12 +66,7 @@ export const me = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  try {
-    res.json({ msg: "Logged out" }); // No cookie to clear
-  } catch (err) {
-    console.error("Logout error:", err);
-    res.status(500).json({ msg: "Server error" });
-  }
+  res.json({ msg: "Logged out" }); // No cookie to clear
 };
 
 export const updateUsername = async (req, res) => {
@@ -103,7 +84,6 @@ export const updateUsername = async (req, res) => {
 
     res.json({ user: updatedUser });
   } catch (err) {
-    console.error("Update username error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

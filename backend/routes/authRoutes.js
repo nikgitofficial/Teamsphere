@@ -17,7 +17,7 @@
   // ✅ Auth routes
   router.post("/register", register);
   router.post("/login", login);
-  router.post("/refresh", refresh);
+  router.get("/refresh", refresh);
   router.get("/me", authenticate, me);
   router.post("/logout", logout);
   router.patch("/update-username", authenticate, updateUsername);
